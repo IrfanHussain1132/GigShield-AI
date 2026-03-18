@@ -1,236 +1,235 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GigShield AI</title>
+# 🚀 GigShield AI
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background: #f5f7fa;
-            color: #333;
-        }
+### AI-Powered Parametric Insurance for Food Delivery Partners
 
-        header {
-            background: #1e293b;
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
+---
 
-        h1 {
-            margin: 0;
-        }
+## 📌 Problem Statement
 
-        section {
-            padding: 25px;
-            margin: 20px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        }
+Food delivery partners working with platforms like Swiggy and Zomato are highly dependent on external conditions such as weather, pollution, and sudden social disruptions.
 
-        h2 {
-            color: #2563eb;
-        }
+During events like heavy rain, heatwaves, or curfews, delivery operations are reduced or halted, leading to **20–30% income loss**.
 
-        ul {
-            line-height: 1.8;
-        }
+Currently, gig workers **do not have any income protection**, forcing them to bear financial losses caused by uncontrollable external factors.
 
-        .highlight {
-            background: #e0f2fe;
-            padding: 10px;
-            border-left: 5px solid #0284c7;
-            margin-top: 10px;
-        }
+---
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
+## 💡 Solution Overview
 
-        table, th, td {
-            border: 1px solid #ddd;
-        }
+**GigShield AI** is an AI-powered parametric insurance platform designed to **automatically compensate food delivery partners for income loss** caused by external disruptions.
 
-        th, td {
-            padding: 10px;
-            text-align: center;
-        }
+The system uses **real-time APIs and AI models** to detect disruptions and trigger **instant payouts without manual claims**.
 
-        th {
-            background: #2563eb;
-            color: white;
-        }
+---
 
-        footer {
-            text-align: center;
-            padding: 20px;
-            background: #1e293b;
-            color: white;
-            margin-top: 20px;
-        }
-    </style>
-</head>
+## 👤 Target Persona
 
-<body>
+* Food Delivery Partners (Swiggy, Zomato)
+* Urban & semi-urban gig workers
+* Individuals earning on a **daily/weekly basis**
 
-<header>
-    <h1>🚀 GigShield AI</h1>
-    <p>AI-Powered Parametric Insurance for Food Delivery Partners</p>
-</header>
+---
 
-<section>
-    <h2>📌 Problem Statement</h2>
-    <p>
-        Food delivery partners face income loss due to weather conditions,
-        pollution, and social disruptions like curfews. They currently have no
-        financial protection against such unpredictable events.
-    </p>
-</section>
+## ⚙️ System Workflow
 
-<section>
-    <h2>💡 Solution</h2>
-    <p>
-        GigShield AI provides automatic compensation for income loss using
-        AI and real-time APIs. No manual claims are required — everything is
-        detected and processed automatically.
-    </p>
-</section>
+1. **User Onboarding**
 
-<section>
-    <h2>👤 Target Users</h2>
-    <ul>
-        <li>Swiggy / Zomato delivery partners</li>
-        <li>Urban & semi-urban gig workers</li>
-        <li>Workers earning weekly income</li>
-    </ul>
-</section>
+   * User signs up via mobile app
+   * Inputs:
 
-<section>
-    <h2>⚙️ Workflow</h2>
-    <ul>
-        <li>User signs up and provides location & income</li>
-        <li>AI calculates risk score & weekly premium</li>
-        <li>System monitors weather, maps, and news APIs</li>
-        <li>Disruption detected automatically</li>
-        <li>Income loss calculated</li>
-        <li>Instant payout triggered 💸</li>
-    </ul>
-</section>
+     * Location 📍
+     * Working hours
+     * Average weekly income
 
-<section>
-    <h2>💰 Compensation Model</h2>
-    <div class="highlight">
-        Compensation = Avg Hourly Income × Hours Lost
-    </div>
-</section>
+2. **Risk Profiling (AI-Based)**
 
-<section>
-    <h2>💸 Weekly Premium Model</h2>
-    <p>
-        Premium is calculated weekly based on risk level, location, and expected disruptions.
-    </p>
-    <ul>
-        <li>Example Weekly Income: ₹5000</li>
-        <li>Premium: ₹100/week</li>
-    </ul>
-</section>
+   * AI model analyzes:
 
-<section>
-    <h2>⚡ Parametric Triggers</h2>
+     * Historical weather data
+     * Location risk
+     * Work patterns
+   * Generates:
 
-    <table>
-        <tr>
-            <th>Type</th>
-            <th>Condition</th>
-            <th>Impact</th>
-        </tr>
-        <tr>
-            <td>🌧️ Rain</td>
-            <td>> 50mm</td>
-            <td>Delivery slowdown</td>
-        </tr>
-        <tr>
-            <td>🌡️ Heat</td>
-            <td>> 42°C</td>
-            <td>Unsafe working</td>
-        </tr>
-        <tr>
-            <td>🌫️ Pollution</td>
-            <td>AQI > 300</td>
-            <td>Reduced work</td>
-        </tr>
-        <tr>
-            <td>🚫 Social</td>
-            <td>Curfew / Strike</td>
-            <td>No deliveries</td>
-        </tr>
-    </table>
+     * Risk score
+     * Weekly premium
 
-</section>
+3. **Real-Time Monitoring**
 
-<section>
-    <h2>🤖 AI Features</h2>
-    <ul>
-        <li>Risk prediction model</li>
-        <li>Dynamic premium calculation</li>
-        <li>Fraud detection (location + behavior)</li>
-    </ul>
-</section>
+   * System continuously tracks:
 
-<section>
-    <h2>🔗 APIs Used</h2>
-    <ul>
-        <li>Weather API</li>
-        <li>Google Maps API</li>
-        <li>News API</li>
-        <li>Air Quality API (optional)</li>
-    </ul>
-</section>
+     * 🌧️ Weather conditions
+     * 🗺️ Delivery zones
+     * 📰 Social disruptions (curfews, strikes)
 
-<section>
-    <h2>🛠️ Tech Stack</h2>
-    <ul>
-        <li>Frontend: React.js</li>
-        <li>Backend: Node.js + Express</li>
-        <li>Database: MongoDB</li>
-        <li>AI/ML: Python</li>
-        <li>Payments: Razorpay / Stripe</li>
-    </ul>
-</section>
+4. **Parametric Trigger Activation**
 
-<section>
-    <h2>📊 Dashboard</h2>
-    <ul>
-        <li>Active users</li>
-        <li>Premium collected</li>
-        <li>Claims triggered</li>
-        <li>Payouts processed</li>
-    </ul>
-</section>
+   * If conditions exceed threshold:
 
-<section>
-    <h2>📱 Platform</h2>
-    <p>Mobile-first application for easy access by delivery partners.</p>
-</section>
+     * Rainfall > threshold
+     * Temperature > threshold
+     * AQI > threshold
+     * Curfew detected
 
-<section>
-    <h2>🚀 Future Enhancements</h2>
-    <ul>
-        <li>Heatwave prediction</li>
-        <li>Risk alerts</li>
-        <li>Platform integrations</li>
-    </ul>
-</section>
+5. **Income Loss Calculation**
 
-<footer>
-    <p>© 2026 GigShield AI | Built for Gig Workers ❤️</p>
-</footer>
+   * Based on:
 
-</body>
-</html>
+     * Average hourly income
+     * Duration of disruption
+
+   **Formula:**
+
+   ```
+   Compensation = Avg Hourly Income × Hours Lost
+   ```
+
+6. **Automated Payout**
+
+   * No manual claim required
+   * Instant transfer via payment gateway
+
+---
+
+## 💰 Weekly Premium Model
+
+Gig workers operate on weekly earnings, so GigShield AI uses a **weekly pricing model**.
+
+### Premium Calculation Factors:
+
+* Risk score
+* Location risk
+* Expected disruption frequency
+
+### Example:
+
+* Weekly income: ₹5000
+* Medium risk
+
+👉 Weekly Premium: ₹100
+
+---
+
+## ⚡ Parametric Triggers
+
+| Trigger Type  | Condition          | Impact                    |
+| ------------- | ------------------ | ------------------------- |
+| 🌧️ Rain      | Rainfall > 50mm    | Delivery slowdown         |
+| 🌡️ Heat      | Temperature > 42°C | Unsafe working conditions |
+| 🌫️ Pollution | AQI > 300          | Health risk, reduced work |
+| 🚫 Social     | Curfew/Strike      | No deliveries possible    |
+
+---
+
+## 🤖 AI/ML Integration
+
+### 1. Risk Prediction
+
+* Predicts probability of disruptions
+* Assigns risk score
+
+### 2. Dynamic Premium Pricing
+
+* High risk → higher premium
+* Low risk → lower premium
+
+### 3. Fraud Detection
+
+* Location verification
+* Duplicate claim prevention
+* Activity anomaly detection
+
+---
+
+## 🔗 APIs Used
+
+* 🌧️ Weather API (OpenWeatherMap)
+* 🗺️ Maps API (Google Maps)
+* 📰 News API (for curfew/strike detection)
+* 🌫️ Air Quality API (optional enhancement)
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+
+* React.js (Mobile-first design)
+
+### Backend
+
+* Node.js + Express
+
+### Database
+
+* MongoDB
+
+### AI/ML
+
+* Python (Scikit-learn / ML models)
+
+### Payments
+
+* Razorpay / Stripe (sandbox)
+
+---
+
+## 📊 Analytics Dashboard
+
+The platform includes a dashboard to monitor:
+
+* Active users
+* Weekly premiums collected
+* Claims triggered
+* Total payouts
+* High-risk zones
+
+---
+
+## 📱 Platform Choice
+
+👉 **Mobile Application**
+
+Reason:
+Delivery partners primarily use smartphones during work, making mobile the most accessible platform.
+
+---
+
+## 🔒 Key Features
+
+* ✅ Fully automated claims (No manual reporting)
+* ✅ Real-time disruption detection
+* ✅ Weekly subscription model
+* ✅ AI-driven risk assessment
+* ✅ Instant payout system
+* ✅ Fraud detection mechanisms
+
+---
+
+## 🚀 Future Enhancements
+
+* Heatwave prediction for Indian cities
+* Personalized risk alerts
+* Integration with delivery platforms (Swiggy/Zomato APIs)
+* Multi-city scaling
+
+---
+
+## 🎯 Conclusion
+
+GigShield AI provides a **financial safety net for delivery partners** by leveraging AI and parametric insurance.
+
+It ensures that gig workers are protected from unpredictable disruptions and can maintain **stable income despite external uncertainties**.
+
+---
+
+## 📌 Repository
+
+👉 (Add your GitHub repo link here)
+
+---
+
+## 🎥 Demo Video
+
+👉 (Add your video link here)
+
+---
