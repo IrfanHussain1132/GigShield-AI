@@ -532,42 +532,7 @@ All inter-service communication is REST over HTTP. The Trigger Monitor is a cron
 
 ---
 
-## 📅 Development Plan
 
-### Phase 1 — Seed (March 4–20) ← Current
-
-- [x] Problem definition with verified gig worker income data (TeamLease, Zomato/Swiggy disclosures)
-- [x] Persona development with real-world scenario walkthroughs
-- [x] Parametric triggers calibrated to IMD and CPCB official standards
-- [x] Premium formula with actuarial loss ratio logic
-- [x] ML model design — inputs, algorithms, integration points
-- [x] Adversarial defense and anti-spoofing strategy
-- [x] System architecture design
-- [x] Figma prototype (8 screens)
-- [ ] 2-minute strategy video → paste link above in place of `[Watch here](#)`
-
-### Phase 2 — Scale (March 21–April 4)
-
-- [ ] PostgreSQL schema — `workers`, `policies`, `disruption_events`, `claims`, `payouts`
-- [ ] Backend REST API — registration, policy CRUD, premium endpoint, trigger monitor
-- [ ] ML Service — XGBoost premium model trained on IMD-calibrated synthetic data
-- [ ] Trigger Monitor — live polling of OpenWeatherMap + AQICN against official thresholds
-- [ ] Razorpay sandbox integration — end-to-end payout flow
-- [ ] Frontend — onboarding (3 steps), policy purchase, active dashboard
-- [ ] 2-minute demo video
-
-### Phase 3 — Soar (April 5–17)
-
-- [ ] Isolation Forest fraud model integrated pre-payout
-- [ ] Cell tower zone validation — cross-reference with disruption zone coverage map
-- [ ] Graph-based fraud ring detection — bipartite worker-device-UPI graph
-- [ ] Admin dashboard — loss ratio tracker, disruption heatmap, manual review queue
-- [ ] Worker dashboard — payout history, active coverage status, live zone conditions
-- [ ] Simulated disruption demo — trigger synthetic heavy rain event, show full auto-payout
-- [ ] Final 5-minute walkthrough video (required: simulated disruption → auto-claim → payout)
-- [ ] Pitch deck PDF — persona, AI architecture, weekly premium business viability
-
----
 
 ## 🚀 Future Enhancements
 
