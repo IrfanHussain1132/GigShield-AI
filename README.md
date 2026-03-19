@@ -273,37 +273,6 @@ The word "fraud" never appears in worker-facing messages for the first four cate
                             └────────────────────────┘
 ```
 
----
-
-## 📅 Development Plan
-
-**Phase 1 — Seed (March 4–20) ← Current**
-- [x] Problem research with verified income data (TeamLease, Zomato/Swiggy)
-- [x] Persona + real-world scenarios
-- [x] IMD/CPCB-calibrated parametric triggers
-- [x] Actuarial premium formula with loss ratio
-- [x] XGBoost + Isolation Forest ML design
-- [x] Adversarial defense & anti-spoofing strategy
-- [x] System architecture
-- [x] Figma prototype (8 screens)
-- [ ] 2-minute strategy video → replace `[Watch here](#)` above
-
-**Phase 2 — Scale (March 21–April 4)**
-- [ ] PostgreSQL schema + Backend REST API
-- [ ] XGBoost premium model on synthetic training data
-- [ ] Trigger Monitor — live polling against IMD/CPCB thresholds
-- [ ] Razorpay sandbox end-to-end payout flow
-- [ ] Frontend — onboarding, policy purchase, dashboard
-- [ ] 2-minute demo video
-
-**Phase 3 — Soar (April 5–17)**
-- [ ] Isolation Forest pre-payout fraud model
-- [ ] Cell tower validation + graph-based ring detection
-- [ ] Admin + Worker dashboards
-- [ ] Simulated disruption → auto-payout end-to-end demo
-- [ ] Final 5-minute video + pitch deck PDF
-
----
 
 ## 🚀 Future Enhancements
 
