@@ -2,11 +2,11 @@
 
 **AI-Powered Parametric Income Insurance for Food Delivery Partners**
 
-> Built for **Guidewire DEVTrails 2026** · In partnership with EY & NIA · Phase 1 — Seed
+> Built for **Guidewire DEVTrails 2026** · In partnership with EY & NIA · **Phase 3 — Neural Scale**
 
-> *"We don't ask workers to prove their loss. The data proves it — and we pay instantly."*
+> *"Real-time parametric protection. Automated fraud detection. Instant payout."*
 
-**Demo Video:** [Watch here](#) &nbsp;|&nbsp; **Repository:** [GitHub](#)
+**Demo Video:** [Watch here](#) &nbsp;|&nbsp; **Repository:** [GitHub](https://github.com/IrfanHussain1132/SecureSync-AI)
 
 ---
 
