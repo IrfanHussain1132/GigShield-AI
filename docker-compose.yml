@@ -1,0 +1,122 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4-alpine
+    container_name: securesync-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-securesync}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-securesync}
+      POSTGRES_DB: ${POSTGRES_DB:-securesync}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-securesync} -d ${POSTGRES_DB:-securesync}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: securesync-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: securesync-zookeeper
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: securesync-kafka
+    restart: unless-stopped
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      - "29092:29092"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: securesync-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      kafka:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-securesync}:${POSTGRES_PASSWORD:-securesync}@postgres:5432/${POSTGRES_DB:-securesync}
+      AUTO_CREATE_SCHEMA: "false"
+      JWT_SECRET: ${JWT_SECRET:-dev-only-change-me}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_EXPIRY_HOURS: ${JWT_EXPIRY_HOURS:-1}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+      ENABLE_DEBUG_OTP: ${ENABLE_DEBUG_OTP:-false}
+      ENABLE_PHASE2_MOCK_OTP: ${ENABLE_PHASE2_MOCK_OTP:-true}
+      PHASE2_MOCK_OTP_CODE: ${PHASE2_MOCK_OTP_CODE:-000000}
+      PREMIUM_SIGNAL_CACHE_TTL_MINUTES: ${PREMIUM_SIGNAL_CACHE_TTL_MINUTES:-30}
+      ENABLE_POSTGIS_ZONE_RISK: ${ENABLE_POSTGIS_ZONE_RISK:-true}
+      POSTGIS_ZONE_RISK_BLEND: ${POSTGIS_ZONE_RISK_BLEND:-0.35}
+      POSTGIS_HOTSPOT_RADIUS_METERS: ${POSTGIS_HOTSPOT_RADIUS_METERS:-2200}
+      ENABLE_TWILIO_SMS: ${ENABLE_TWILIO_SMS:-false}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_SMS_FROM: ${TWILIO_SMS_FROM:-}
+      ENABLE_WHATSAPP_NOTIFICATIONS: ${ENABLE_WHATSAPP_NOTIFICATIONS:-false}
+      TWILIO_WHATSAPP_FROM: ${TWILIO_WHATSAPP_FROM:-whatsapp:+14155238886}
+      ENABLE_RAZORPAY_WEBHOOK: ${ENABLE_RAZORPAY_WEBHOOK:-false}
+      RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET:-}
+      ENABLE_KAFKA_EVENTS: ${ENABLE_KAFKA_EVENTS:-false}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
+      KAFKA_TOPIC_PREFIX: ${KAFKA_TOPIC_PREFIX:-securesync}
+      ENABLE_REDIS_RATE_LIMIT: ${ENABLE_REDIS_RATE_LIMIT:-true}
+      ENABLE_REDIS_CACHE: ${ENABLE_REDIS_CACHE:-true}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      REDIS_CACHE_TTL_SECONDS: ${REDIS_CACHE_TTL_SECONDS:-30}
+      REDIS_KEY_PREFIX: ${REDIS_KEY_PREFIX:-securesync}
+      OPENWEATHER_KEY: ${OPENWEATHER_KEY:-}
+      IQAIR_KEY: ${IQAIR_KEY:-}
+      TOMTOM_KEY: ${TOMTOM_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: securesync-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      VITE_API_BASE: http://localhost:${BACKEND_PORT:-8000}/api/v1
+      VITE_PHASE2_MOCK_OTP: ${ENABLE_PHASE2_MOCK_OTP:-false}
+      VITE_PHASE2_MOCK_OTP_CODE: ${PHASE2_MOCK_OTP_CODE:-000000}
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+
+volumes:
+  postgres_data:

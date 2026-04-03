@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureSync AI — Admin Command Center</title>
+    <meta name="description" content="Admin dashboard for SecureSync AI parametric insurance platform. Monitor loss ratios, fraud rings, and disruption events.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" />
+    <style>
+        :root {
+            /* SecureSync AI Design System - Admin Dark Mode Tokens */
+            --bg: #090e14;
+            --bg-glass: rgba(15, 23, 42, 0.8);
+            --bg-card: #111a24;
+            --bg-card-hover: #16222e;
+            --border: rgba(255, 255, 255, 0.08);
+            --primary: #00d4aa;
+            --primary-dim: rgba(0, 212, 170, 0.12);
+            --on-primary: #00201b;
+            --text: #f1f5f9;
+            --text-dim: #94a3b8;
+            --text-muted: #64748b;
+            --danger: #ff4b5c;
+            --danger-dim: rgba(255, 75, 92, 0.15);
+            --warning: #ffb800;
+            --warning-dim: rgba(255, 184, 0, 0.15);
+            --success: #10b981;
+            --success-dim: rgba(16, 185, 129, 0.15);
+            --info: #3b82f6;
+            --info-dim: rgba(59, 130, 246, 0.15);
+            --radius-xl: 24px;
+            --radius-lg: 16px;
+            --radius-sm: 8px;
+            --shadow-premium: 0 10px 40px -10px rgba(0, 0, 0, 0.4);
+            --glass-blur: blur(20px);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+        /* Sidebar Design */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #0c151e 0%, #090e14 100%);
+            border-right: 1px solid var(--border);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 100;
+            padding: 32px 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 48px;
+            padding: 0 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), #00a08e);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 16px rgba(0, 212, 170, 0.2);
+        }
+
+        .brand-name { font-weight: 800; font-size: 18px; letter-spacing: -0.5px; }
+        .brand-tag { font-size: 11px; text-transform: uppercase; color: var(--primary); font-weight: 700; letter-spacing: 2px; }
+
+        .nav-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); margin: 24px 0 12px 12px; }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            margin-bottom: 4px;
+        }
+
+        .nav-item:hover { background: rgba(255, 255, 255, 0.03); color: var(--text); }
+        .nav-item.active { background: var(--primary-dim); color: var(--primary); }
+        .nav-item .material-symbols-outlined { font-size: 20px; }
+
+        /* Main Body Area */
+        .main-stage {
+            margin-left: 280px;
+            flex: 1;
+            padding: 48px;
+            max-width: 1600px;
+        }
+
+        .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
+        .page-title { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 4px; }
+        .page-desc { color: var(--text-dim); font-size: 15px; }
+
+        /* KPI Cards Grid */
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 32px; }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: 24px;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-premium);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover { border-color: rgba(255, 255, 255, 0.15); transform: translateY(-4px); background: var(--bg-card-hover); }
+
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .kpi-label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .kpi-value { font-size: 32px; font-weight: 800; letter-spacing: -0.5px; }
+        .kpi-delta { font-size: 13px; margin-top: 8px; display: flex; align-items: center; gap: 4px; }
+
+        /* Chart/Feature Grid */
+        .row-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px; }
+
+        .card-title { font-size: 18px; font-weight: 700; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; }
+
+        /* Heatmap / Zone Display */
+        .zone-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .zone-pill {
+            padding: 16px;
+            border-radius: var(--radius-lg);
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+        .zone-pill:hover { background: rgba(255, 255, 255, 0.04); border-color: var(--primary-dim); }
+        .zone-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+        .zone-stat { font-size: 12px; color: var(--text-dim); }
+
+        /* Badge Styles */
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .badge-success { background: var(--success-dim); color: var(--success); }
+        .badge-warning { background: var(--warning-dim); color: var(--warning); }
+        .badge-danger { background: var(--danger-dim); color: var(--danger); }
+        .badge-info { background: var(--info-dim); color: var(--info); }
+
+        /* Live Indicator */
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+            animation: live-pulse 2s infinite;
+        }
+
+        @keyframes live-pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.4; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Buttons Manager */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-approve { background: var(--success); color: white; box-shadow: 0 4px 12px var(--success-dim); }
+        .btn-reject { background: var(--danger); color: white; box-shadow: 0 4px 12px var(--danger-dim); }
+        .btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        .btn:active { transform: scale(0.95); }
+
+        /* Table Design */
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th { text-align: left; padding: 16px; font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); }
+        .data-table td { padding: 16px; font-size: 14px; border-bottom: 1px solid var(--border); }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 100px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+
+        @media (max-width: 1280px) {
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .row-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar { display: none; }
+            .main-stage { margin-left: 0; padding: 24px; }
+        }
+    </style>
+</head>
+<body>
+<body>
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo-box">
+            <div class="logo-icon">
+                <span class="material-symbols-outlined" style="color:white;font-size:24px;">shield</span>
+            </div>
+            <div>
+                <h1 class="brand-name jakarta">SecureSync</h1>
+                <p class="brand-tag">Command Center</p>
+            </div>
+        </div>
+        
+        <p class="nav-label">Main Console</p>
+        <button class="nav-item active" onclick="showSection('overview')">
+            <span class="material-symbols-outlined">dashboard</span> Overview
+        </button>
+        <button class="nav-item" onclick="showSection('heatmap')">
+            <span class="material-symbols-outlined">explore</span> Zone Heatmap
+        </button>
+        <button class="nav-item" onclick="showSection('forecast')">
+            <span class="material-symbols-outlined">insights</span> LSTM Forecasts
+        </button>
+        
+        <p class="nav-label">Operations</p>
+        <button class="nav-item" onclick="showSection('review')">
+            <span class="material-symbols-outlined">fact_check</span> Review Queue
+        </button>
+        <button class="nav-item" onclick="showSection('fraud')">
+            <span class="material-symbols-outlined">hub</span> Fraud Graph
+        </button>
+        <button class="nav-item" onclick="showSection('workers')">
+            <span class="material-symbols-outlined">group</span> Fleet Manager
+        </button>
+        
+        <p class="nav-label">System</p>
+        <button class="nav-item" onclick="showSection('triggers')">
+            <span class="material-symbols-outlined">bolt</span> Neural Triggers
+        </button>
+
+        <div style="margin-top:auto; padding:16px; background:rgba(255,255,255,0.02); border-radius:16px; display:flex; align-items:center; gap:12px;">
+            <div class="pulse" style="width:6px; height:6px;"></div>
+            <div>
+                <p style="font-size:11px; font-weight:700; color:var(--primary);">PHASE 3 SOAR</p>
+                <p style="font-size:10px; color:var(--text-muted);">Neural Engine v3.0</p>
+            </div>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-stage">
+        <!-- Overview Section -->
+        <div id="section-overview">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title jakarta">Neural Overview</h1>
+                    <p class="page-desc">Real-time parametric coverage telemetry</p>
+                </div>
+                <div class="status-pill">
+                    <div class="pulse"></div>
+                    <span id="current-time"></span>
+                </div>
+            </div>
+            
+            <!-- Global KPIs -->
+            <div class="kpi-grid">
+                <div class="card">
+                    <div class="kpi-icon" style="background:var(--primary-dim);">
+                        <span class="material-symbols-outlined" style="color:var(--primary);">shield</span>
+                    </div>
+                    <p class="kpi-label">Active Policies</p>
+                    <p class="kpi-value jakarta" id="m-policies">—</p>
+                    <p class="kpi-delta" style="color:var(--success);">
+                        <span class="material-symbols-outlined" style="font-size:16px;">trending_up</span>
+                        <span id="m-workers">—</span> partners
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="kpi-icon" style="background:var(--warning-dim);">
+                        <span class="material-symbols-outlined" style="color:var(--warning);">payments</span>
+                    </div>
+                    <p class="kpi-label">Month Liability</p>
+                    <p class="kpi-value jakarta">₹<span id="m-payouts">—</span></p>
+                    <p class="kpi-delta" style="color:var(--text-dim);">
+                         <span id="m-payout-count">0</span> claims processed
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="kpi-icon" id="lr-icon-bg" style="background:var(--success-dim);">
+                        <span class="material-symbols-outlined" id="lr-icon-sym" style="color:var(--success);">query_stats</span>
+                    </div>
+                    <p class="kpi-label">Loss Ratio</p>
+                    <p class="kpi-value jakarta" id="m-loss-ratio">—</p>
+                    <p class="kpi-delta" style="color:var(--text-muted);">Target: 65% Maximum</p>
+                </div>
+                <div class="card">
+                    <div class="kpi-icon" style="background:var(--info-dim);">
+                        <span class="material-symbols-outlined" style="color:var(--info);">speed</span>
+                    </div>
+                    <p class="kpi-label">Avg Payout Speed</p>
+                    <p class="kpi-value jakarta"><span id="m-processing">—</span><span style="font-size:14px; opacity:0.5;">ms</span></p>
+                    <p class="kpi-delta" style="color:var(--success);">
+                         <span class="material-symbols-outlined" style="font-size:16px;">bolt</span> Instant Credit
+                    </p>
+                </div>
+            </div>
+            
+            <div class="row-grid">
+                <!-- Disruption Heatmap -->
+                <div class="card">
+                    <div class="card-title">
+                        <span class="jakarta">Zone Severity Heatmap</span>
+                        <span class="badge badge-info">Real-time</span>
+                    </div>
+                    <div class="zone-grid" id="zone-heatmap"></div>
+                </div>
+                <!-- Fraud Metrics -->
+                <div class="card">
+                    <div class="card-title">
+                        <span class="jakarta">Risk Engine</span>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:20px;" id="fraud-stats">
+                        <div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                                <span style="font-size:13px; color:var(--text-dim);">Auto-verified</span>
+                                <span style="font-size:13px; font-weight:700; color:var(--success);" id="f-auto">—</span>
+                            </div>
+                            <div style="height:6px; background:rgba(255,255,255,0.05); border-radius:10px; overflow:hidden;">
+                                <div style="height:100%; background:var(--success); border-radius:10px; width:0%; transition:width 1s ease;" id="f-auto-bar"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                                <span style="font-size:13px; color:var(--text-dim);">Manually Held</span>
+                                <span style="font-size:13px; font-weight:700; color:var(--danger);" id="f-hard">—</span>
+                            </div>
+                            <div style="height:6px; background:rgba(255,255,255,0.05); border-radius:10px; overflow:hidden;">
+                                <div style="height:100%; background:var(--danger); border-radius:10px; width:0%; transition:width 1s ease;" id="f-hard-bar"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top:32px; padding:16px; background:rgba(255,255,255,0.02); border-radius:12px; border:1px dashed var(--border);">
+                         <p style="font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:8px;">Active Defense</p>
+                         <div style="display:flex; align-items:center; gap:8px;">
+                             <span class="material-symbols-outlined" style="color:var(--primary); font-size:18px;">psychology</span>
+                             <span style="font-size:12px;">Isolation Forest Engine Loaded</span>
+                         </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Review List Container -->
+            <div class="card">
+                <div class="card-title">
+                     <span class="jakarta">Pending Verification Queue</span>
+                     <span class="badge badge-warning" id="review-count">0 Actions</span>
+                </div>
+                <div id="review-list">
+                    <div style="text-align:center; padding:48px; border:1px dashed var(--border); border-radius:16px;">
+                        <span class="material-symbols-outlined" style="font-size:48px; opacity:0.1; margin-bottom:12px;">checklist</span>
+                        <p style="color:var(--text-muted);">Queue cleared. All payouts verified via neural engine.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Other Sections (Heatmap Expanded, Forecasts, etc.) -->
+        <div id="section-heatmap" style="display:none;">
+            <h1 class="page-title jakarta">Heatmap Analysis</h1>
+            <p class="page-desc" style="margin-bottom:32px;">Zone-wise disruption severity telemetry</p>
+            <div class="zone-grid" id="zone-heatmap-full" style="grid-template-columns: repeat(2, 1fr);"></div>
+        </div>
+        
+        <div id="section-forecast" style="display:none;">
+            <h1 class="page-title jakarta">Predictive Forecasting</h1>
+            <p class="page-desc" style="margin-bottom:32px;">72-hour risk projection using simplified LSTM</p>
+            <div id="forecast-zones" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:24px;"></div>
+        </div>
+
+        <div id="section-fraud" style="display:none;">
+            <h1 class="page-title jakarta">Fraud Graph Architecture</h1>
+            <p class="page-desc" style="margin-bottom:32px;">Visualizing multi-account device rings</p>
+            <div id="fraud-graph-view"></div>
+        </div>
+
+        <div id="section-workers" style="display:none;">
+             <h1 class="page-title jakarta">Fleet Manager</h1>
+             <p class="page-desc" style="margin-bottom:32px;">Partner fleet status and policy coverage</p>
+             <div id="workers-list" class="card" style="padding:0; overflow:hidden;"></div>
+        </div>
+
+        <div id="section-triggers" style="display:none;">
+             <h1 class="page-title jakarta">Neural Triggers</h1>
+             <p class="page-desc" style="margin-bottom:32px;">Raw event stream from environment sensors</p>
+             <div class="card" id="trigger-list"></div>
+        </div>
+
+        <div id="section-review" style="display:none;">
+             <h1 class="page-title jakarta">Review Queue</h1>
+             <p class="page-desc" style="margin-bottom:32px;">Manual intervention for flagged transactions</p>
+             <div id="review-full"></div>
+        </div>
+    </main>
+</div>
+
+<script>
+const API_BASE = window.location.port === '5173' 
+    ? 'http://localhost:8000/api/v1' 
+    : `${window.location.origin}/api/v1`;
+
+// Update time
+function updateTime() {
+    const el = document.getElementById('current-time');
+    const locale = (window.localStorage.getItem('securesync_lang') || 'en') + '-IN';
+    if (el) el.textContent = new Date().toLocaleString(locale, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+}
+setInterval(updateTime, 1000);
+updateTime();
+
+async function fetchAPI(path) {
+    try {
+        const res = await fetch(`${API_BASE}${path}`, { timeout: 5000 });
+        if (!res.ok) return null;
+        return await res.json();
+    } catch(e) {
+        console.warn('API fetch failed:', path, e);
+        return null;
+    }
+}
+
+// Section Management with smoother transitions
+function showSection(id) {
+    const sections = ['overview', 'heatmap', 'forecast', 'review', 'fraud', 'workers', 'triggers'];
+    sections.forEach(s => {
+        const el = document.getElementById('section-' + s);
+        if (el) el.style.display = (s === id) ? 'block' : 'none';
+    });
+    
+    document.querySelectorAll('.nav-item').forEach(btn => {
+        if (btn.innerText.toLowerCase().includes(id)) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    // Integrated loaders
+    if (id === 'overview') loadAll();
+    if (id === 'heatmap') loadHeatmapOverview();
+    if (id === 'forecast') loadForecasts();
+    if (id === 'review') loadReviewQueueOverview();
+    if (id === 'fraud') loadFraudGraph();
+    if (id === 'workers') loadWorkers();
+    if (id === 'triggers') loadTriggers();
+}
+
+function updateClock() {
+    const now = new Date();
+    const clockEl = document.getElementById('current-time');
+    if (clockEl) {
+        clockEl.textContent = now.toLocaleString('en-US', { 
+            hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true 
+        });
+    }
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+async function loadOverview() {
+    const data = await fetchAPI('/admin/overview');
+    if (!data) return;
+    
+    document.getElementById('m-policies').textContent = data.active_policies;
+    document.getElementById('m-workers').textContent = data.total_workers;
+    const locale = (window.localStorage.getItem('securesync_lang') || 'en') + '-IN';
+    document.getElementById('m-payouts').textContent = Number(data.month_payouts_total || 0).toLocaleString(locale);
+    document.getElementById('m-payout-count').textContent = data.month_payouts_count;
+    document.getElementById('m-processing').textContent = data.avg_processing_ms;
+    
+    const lr = Math.round((data.loss_ratio || 0) * 100);
+    document.getElementById('m-loss-ratio').textContent = lr + '%';
+    
+    const lrBg = document.getElementById('lr-icon-bg');
+    const lrSym = document.getElementById('lr-icon-sym');
+    
+    if (lr > 80) {
+        lrBg.style.background = 'var(--danger-dim)';
+        lrSym.style.color = 'var(--danger)';
+    } else if (lr > 65) {
+        lrBg.style.background = 'var(--warning-dim)';
+        lrSym.style.color = 'var(--warning)';
+    } else {
+        lrBg.style.background = 'var(--success-dim)';
+        lrSym.style.color = 'var(--success)';
+    }
+    
+    // Risk breakdown
+    const total = data.week_claims || 1;
+    const credited = data.week_credited || 0;
+    const held = data.week_held || 0;
+    
+    const autoP = Math.round((credited / Math.max(total, 1)) * 100);
+    const hardP = Math.round((held / Math.max(total, 1)) * 100);
+    
+    document.getElementById('f-auto').textContent = autoP + '%';
+    document.getElementById('f-hard').textContent = hardP + '%';
+    document.getElementById('f-auto-bar').style.width = autoP + '%';
+    document.getElementById('f-hard-bar').style.width = hardP + '%';
+}
+
+async function loadHeatmapOverview() {
+    const data = await fetchAPI('/admin/heatmap?days=7');
+    if (!data || !data.zones) return;
+    
+    const zones = Object.values(data.zones);
+    const renderZones = (containerId) => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = zones.map(z => {
+            const severityClass = z.severity > 70 ? 'badge-danger' : z.severity > 40 ? 'badge-warning' : z.severity > 15 ? 'badge-info' : 'badge-success';
+            return `<div class="zone-pill">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <span class="zone-name jakarta">${z.zone}</span>
+                    <span class="badge ${severityClass}">${z.alert_level}</span>
+                </div>
+                <p class="zone-stat">${z.total_events} Events · ${z.total_affected_workers} Fleet</p>
+                <div style="margin-top:12px; height:4px; background:rgba(255,255,255,0.03); border-radius:10px; overflow:hidden;">
+                    <div style="height:100%; width:${Math.min(z.severity, 100)}%; background:currentColor;" class="${severityClass.replace('badge-', 'text-')}"></div>
+                </div>
+            </div>`;
+        }).join('');
+    };
+    renderZones('zone-heatmap');
+    renderZones('zone-heatmap-full');
+}
+
+async function loadReviewQueueOverview() {
+    const data = await fetchAPI('/admin/review-queue?limit=5');
+    if (!data) return;
+    
+    document.getElementById('review-count').textContent = `${data.count} Actions Required`;
+    const list = document.getElementById('review-list');
+    
+    if (data.count === 0) {
+        list.innerHTML = `<div style="text-align:center; padding:48px; border:1px dashed var(--border); border-radius:16px;">
+            <span class="material-symbols-outlined" style="font-size:48px; opacity:0.1; margin-bottom:12px;">checklist</span>
+            <p style="color:var(--text-muted);">Queue cleared. All payouts verified via neural engine.</p>
+        </div>`;
+        return;
+    }
+    
+    list.innerHTML = data.queue.map(p => `
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:20px; border-bottom:1px solid var(--border);">
+            <div style="display:flex; align-items:center; gap:16px;">
+                <div style="width:48px; height:48px; border-radius:12px; background:var(--warning-dim); display:flex; align-items:center; justify-content:center;">
+                    <span class="material-symbols-outlined" style="color:var(--warning);">person</span>
+                </div>
+                <div>
+                    <p style="font-weight:700; font-size:15px;">${p.worker?.name || 'Partner Account'}</p>
+                    <p style="font-size:12px; color:var(--text-muted);">₹${p.amount_rupees} · ${p.type} · Risk Score: ${p.fraud_score}</p>
+                </div>
+            </div>
+            <div style="display:flex; gap:12px;">
+                <button class="btn btn-approve" onclick="approvePayoutAdmin(${p.payout_id})">Release</button>
+                <button class="btn btn-reject" onclick="rejectPayoutAdmin(${p.payout_id})">Hold</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function approvePayoutAdmin(id) {
+    await fetch(`${API_BASE}/admin/review/${id}/approve`, { method: 'POST' });
+    loadReviewQueueOverview();
+    loadOverview();
+}
+
+async function rejectPayoutAdmin(id) {
+    await fetch(`${API_BASE}/admin/review/${id}/reject`, { method: 'POST' });
+    loadReviewQueueOverview();
+    loadOverview();
+}
+
+async function loadForecasts() {
+    const container = document.getElementById('forecast-zones');
+    const data = await fetchAPI('/forecast/zones');
+    if (!data) return;
+    
+    container.innerHTML = data.map(z => {
+        const alertColor = z.max_risk_6h >= 70 ? 'var(--danger)' : z.max_risk_6h >= 45 ? 'var(--warning)' : z.max_risk_6h >= 20 ? 'var(--info)' : 'var(--success)';
+        return `<div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <div>
+                    <h3 class="jakarta" style="font-size:16px;font-weight:700;">${z.zone}</h3>
+                    <p style="font-size:12px;color:var(--text-muted);">${z.city}</p>
+                </div>
+                <div style="text-align:right;">
+                    <p style="font-size:24px;font-weight:800;color:${alertColor};">${z.max_risk_6h}%</p>
+                    <p style="font-size:10px;color:var(--text-muted);">6h risk</p>
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">
+                <div style="background:rgba(255,255,255,0.03);padding:8px;border-radius:8px;text-align:center;">
+                    <p style="font-size:10px;color:var(--text-muted);">24h</p>
+                    <p style="font-size:16px;font-weight:700;">${z.max_risk_24h}%</p>
+                </div>
+                <div style="background:rgba(255,255,255,0.03);padding:8px;border-radius:8px;text-align:center;">
+                    <p style="font-size:10px;color:var(--text-muted);">72h</p>
+                    <p style="font-size:16px;font-weight:700;">${z.max_risk_72h}%</p>
+                </div>
+                <div style="background:rgba(255,255,255,0.03);padding:8px;border-radius:8px;text-align:center;">
+                    <p style="font-size:10px;color:var(--danger);">RED hrs</p>
+                    <p style="font-size:16px;font-weight:700;">${z.red_hours}</p>
+                </div>
+            </div>
+            <p style="font-size:12px;color:var(--text-dim);">${z.message}</p>
+        </div>`;
+    }).join('');
+}
+
+async function loadFraudGraph() {
+    const container = document.getElementById('fraud-graph-view');
+    const data = await fetchAPI('/admin/fraud-graph');
+    if (!data) { container.innerHTML = '<p style="color:var(--text-muted);">No data</p>'; return; }
+    
+    const stats = data.graph_stats;
+    container.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
+            <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;text-align:center;">
+                <p style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">Workers</p>
+                <p style="font-size:24px;font-weight:800;margin-top:4px;">${stats.total_workers}</p>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;text-align:center;">
+                <p style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">Devices</p>
+                <p style="font-size:24px;font-weight:800;margin-top:4px;">${stats.total_devices}</p>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;text-align:center;">
+                <p style="font-size:10px;color:var(--warning);text-transform:uppercase;letter-spacing:1px;">Shared Devices</p>
+                <p style="font-size:24px;font-weight:800;color:var(--warning);margin-top:4px;">${stats.shared_devices}</p>
+            </div>
+            <div style="background:var(--danger-dim);padding:16px;border-radius:12px;text-align:center;">
+                <p style="font-size:10px;color:var(--danger);text-transform:uppercase;letter-spacing:1px;">Fraud Rings</p>
+                <p style="font-size:24px;font-weight:800;color:var(--danger);margin-top:4px;">${stats.fraud_rings_detected}</p>
+            </div>
+        </div>
+        ${stats.rings.length > 0 ? stats.rings.map(r => `
+            <div style="background:var(--danger-dim);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:16px;margin-bottom:12px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                    <span class="material-symbols-outlined" style="color:var(--danger);">warning</span>
+                    <span style="font-weight:700;color:var(--danger);">${r.risk_level} — ${r.ring_size} accounts</span>
+                </div>
+                <p style="font-size:13px;color:var(--text-dim);">${r.reason}</p>
+            </div>
+        `).join('') : '<p style="color:var(--success);margin-top:16px;">✅ No fraud rings detected — all accounts clean</p>'}
+    `;
+}
+
+async function loadWorkers() {
+    const container = document.getElementById('workers-list');
+    const data = await fetchAPI('/admin/workers');
+    if (!data) { container.innerHTML = '<p style="color:var(--text-muted); padding:20px;">No data</p>'; return; }
+    
+    container.innerHTML = `
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Partner & Platform</th>
+                    <th>Zone</th>
+                    <th>Growth Score</th>
+                    <th>Policy Tier</th>
+                    <th style="text-align:right;">Total Payouts</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${data.map(w => `
+                <tr>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div style="width:36px; height:36px; border-radius:10px; background:var(--primary-dim); display:flex; align-items:center; justify-content:center;">
+                                <span class="material-symbols-outlined" style="font-size:18px; color:var(--primary);">person</span>
+                            </div>
+                            <div>
+                                <p style="font-weight:700;">${w.name || 'Anonymous'}</p>
+                                <p style="font-size:11px; color:var(--text-muted);">${w.partner_id || 'ID Pending'}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span style="font-size:13px; font-weight:500;">${w.zone || '—'}</span></td>
+                    <td>
+                         <span style="font-weight:800; color:${w.score >= 80 ? 'var(--success)' : w.score >= 60 ? 'var(--warning)' : 'var(--danger)'};">${w.score}</span>
+                    </td>
+                    <td>
+                        <span class="badge ${w.has_active_policy ? 'badge-success' : 'badge-info'}">
+                            ${w.has_active_policy ? w.policy_tier || 'PRO' : 'INACTIVE'}
+                        </span>
+                    </td>
+                    <td style="text-align:right; font-weight:800; color:var(--text);">${Number(w.total_payout_amount).toLocaleString((window.localStorage.getItem('securesync_lang') || 'en')+'-IN', {style:'currency', currency:'INR', minimumFractionDigits:0})}</td>
+                </tr>`).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+async function loadLossRatio() {
+    const container = document.getElementById('loss-detail');
+    const data = await fetchAPI('/admin/loss-ratio?days=30');
+    if (!data || !data.data) { container.innerHTML = '<p style="color:var(--text-muted);">No data</p>'; return; }
+    
+    container.innerHTML = `
+        <div style="display:flex;gap:6px;align-items:flex-end;height:200px;margin-bottom:16px;">
+            ${data.data.map(d => {
+                const h = Math.max(4, Math.min(190, d.loss_ratio * 190));
+                const color = d.loss_ratio > 0.80 ? 'var(--danger)' : d.loss_ratio > 0.65 ? 'var(--warning)' : 'var(--accent)';
+                return `<div class="bar-container"><div class="bar-track" style="height:200px;"><div class="chart-bar" style="height:${h}px;background:${color};width:100%;"></div></div></div>`;
+            }).join('')}
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+            <span style="font-size:10px;color:var(--text-muted);">${data.data[0]?.label || ''}</span>
+            <span style="font-size:10px;color:var(--text-muted);">${data.data[data.data.length-1]?.label || ''}</span>
+        </div>
+        <div style="margin-top:16px;padding:12px;background:rgba(255,255,255,0.03);border-radius:8px;">
+            <span style="font-size:12px;color:var(--text-muted);">Target loss ratio: </span>
+            <span style="font-weight:700;color:var(--accent);">≤ 65%</span>
+        </div>
+    `;
+}
+
+async function loadTriggers() {
+    const container = document.getElementById('trigger-list');
+    const data = await fetchAPI('/admin/trigger-history?limit=30');
+    if (!data) { container.innerHTML = '<p style="color:var(--text-muted); padding:20px;">No telemetry found</p>'; return; }
+    
+    const iconMap = {
+        'Heavy Rain': 'rainy', 'AQI Danger': 'air', 'Heat Wave': 'thermostat',
+        'Red Alert': 'notifications_active', 'Dense Fog': 'foggy', 'Gridlock': 'traffic',
+        'Bandh': 'lock_clock', 'Platform Outage': 'cloud_off',
+    };
+    
+    container.innerHTML = data.length === 0 
+        ? '<div style="padding:48px; text-align:center;"><p style="color:var(--text-muted);">No neural triggers recorded</p></div>'
+        : data.map(e => `
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border);">
+            <div style="display:flex; align-items:center; gap:16px;">
+                <div style="width:40px; height:40px; border-radius:12px; background:${e.alert_level==='RED'?'var(--danger-dim)':'var(--warning-dim)'}; display:flex; align-items:center; justify-content:center;">
+                    <span class="material-symbols-outlined" style="font-size:20px; color:${e.alert_level==='RED'?'var(--danger)':'var(--warning)'};">${iconMap[e.type]||'bolt'}</span>
+                </div>
+                <div>
+                    <p style="font-weight:700; font-size:14px;">${e.type} — ${e.zone}</p>
+                    <p style="font-size:12px; color:var(--text-muted);">${e.timestamp} · Impacting ${e.affected_workers} partners</p>
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <span class="badge ${e.alert_level==='RED'?'badge-danger':'badge-warning'}">${e.alert_level}</span>
+                <p style="font-size:10px; color:var(--text-muted); margin-top:4px;">Signal: ${e.signal_value}</p>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function loadReviewQueue() {
+    const container = document.getElementById('review-full');
+    const data = await fetchAPI('/admin/review-queue?limit=20');
+    if (!data) { container.innerHTML = '<p style="color:var(--text-muted); padding:24px;">Connection to neural engine lost</p>'; return; }
+    
+    if (data.count === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:64px; background:var(--bg-card); border-radius:16px; border:1px dashed var(--border);">
+                <span class="material-symbols-outlined" style="font-size:56px; color:var(--success); opacity:0.3; margin-bottom:16px;">verified_user</span>
+                <p style="font-size:18px; color:var(--text); font-weight:700;">Queue Synchronized</p>
+                <p style="font-size:14px; color:var(--text-dim); margin-top:4px;">Machine verification has auto-cleared all pending claims.</p>
+            </div>`;
+        return;
+    }
+    
+    container.innerHTML = data.queue.map(p => `
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:24px; background:var(--bg-card); border:1px solid var(--border); border-radius:16px; margin-bottom:12px;">
+            <div style="display:flex; align-items:center; gap:16px;">
+                <div style="width:52px; height:52px; border-radius:14px; background:var(--warning-dim); display:flex; align-items:center; justify-content:center;">
+                    <span class="material-symbols-outlined" style="color:var(--warning); font-size:24px;">gavel</span>
+                </div>
+                <div>
+                    <h4 style="font-weight:800; font-size:16px;">${p.worker?.name || 'Partner Account'}</h4>
+                    <p style="font-size:13px; color:var(--text-dim); margin-top:2px;">₹${p.amount_rupees} · ${p.type} · Neural Risk Score: ${p.fraud_score}</p>
+                    <p style="font-size:11px; color:var(--danger); margin-top:4px; font-weight:700;">Reason: ${p.reason}</p>
+                </div>
+            </div>
+            <div style="display:flex; gap:12px;">
+                <button class="btn btn-approve" onclick="approvePayoutAdmin(${p.payout_id});">Release Funds</button>
+                <button class="btn btn-reject" onclick="rejectPayoutAdmin(${p.payout_id});">Flag for Audit</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Global Sync
+function loadAll() {
+    loadOverview();
+    loadHeatmapOverview();
+    loadReviewQueueOverview();
+}
+
+// Cycle initialization
+document.addEventListener('DOMContentLoaded', () => {
+    loadAll();
+    // Auto-sync every 60s
+    setInterval(loadAll, 60000);
+});
+</script>
+</body>
+</html>

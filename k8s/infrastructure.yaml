@@ -1,0 +1,212 @@
+# SecureSync AI — Frontend Kubernetes Deployment (Phase 3)
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: securesync-frontend
+  namespace: securesync
+  labels:
+    app: securesync
+    component: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: securesync
+      component: frontend
+  template:
+    metadata:
+      labels:
+        app: securesync
+        component: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: gcr.io/securesync-ai/frontend:latest
+          ports:
+            - containerPort: 5173
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: securesync-frontend
+  namespace: securesync
+spec:
+  selector:
+    app: securesync
+    component: frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5173
+  type: ClusterIP
+---
+# Redis
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: securesync-redis
+  namespace: securesync
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: securesync
+      component: redis
+  template:
+    metadata:
+      labels:
+        app: securesync
+        component: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - containerPort: 6379
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: securesync-redis
+  namespace: securesync
+spec:
+  selector:
+    app: securesync
+    component: redis
+  ports:
+    - protocol: TCP
+      port: 6379
+      targetPort: 6379
+  type: ClusterIP
+---
+# PostgreSQL
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: securesync-postgres
+  namespace: securesync
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: securesync
+      component: postgres
+  template:
+    metadata:
+      labels:
+        app: securesync
+        component: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgis/postgis:16-3.4-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: securesync-secrets
+                  key: postgres-user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: securesync-secrets
+                  key: postgres-password
+            - name: POSTGRES_DB
+              value: "securesync"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-data
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: securesync-postgres-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: securesync-postgres
+  namespace: securesync
+spec:
+  selector:
+    app: securesync
+    component: postgres
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: securesync-postgres-pvc
+  namespace: securesync
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+# Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: securesync-ingress
+  namespace: securesync
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+    - hosts:
+        - app.securesync.ai
+      secretName: securesync-tls
+  rules:
+    - host: app.securesync.ai
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: securesync-backend
+                port:
+                  number: 8000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: securesync-frontend
+                port:
+                  number: 80
+---
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: securesync
