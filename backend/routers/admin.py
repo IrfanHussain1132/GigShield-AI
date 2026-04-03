@@ -328,7 +328,7 @@ def reject_payout(payout_id: int, db: Session = Depends(get_db)):
 def fraud_graph_stats(db: Session = Depends(get_db)):
     """
     Fraud ring detection graph analysis.
-    Returns graph statistics and detected fraud rings.
+    Returns graph statistics and detected fraud rings, including D3-compatible visualization data.
     """
     # Rebuild graph from current data
     fraud_graph_service.build_graph_from_db(db)
@@ -338,10 +338,55 @@ def fraud_graph_stats(db: Session = Depends(get_db)):
     shared_devices = graph.detect_shared_devices()
     shared_upis = graph.detect_shared_upis()
 
+    # Generate nodes/links for D3 visualization
+    nodes = []
+    links = []
+    
+    # Map for workers to avoid duplicates and store node index
+    worker_node_map = {}
+    
+    for wid, metadata in graph.worker_metadata.items():
+        node_id = f"w_{wid}"
+        nodes.append({
+            "id": node_id,
+            "label": metadata.get("name", f"Worker {wid}"),
+            "type": "worker",
+            "risk": graph.get_worker_risk(wid).get("ring_risk_score", 0.0)
+        })
+        worker_node_map[wid] = node_id
+        
+        # Add links to devices
+        for dev in graph.worker_to_devices.get(wid, set()):
+            dev_node_id = f"d_{dev}"
+            # Add device node if not exists
+            if not any(n["id"] == dev_node_id for n in nodes):
+                nodes.append({
+                    "id": dev_node_id,
+                    "label": f"Device {dev[-6:]}",
+                    "type": "device"
+                })
+            links.append({"source": node_id, "target": dev_node_id, "type": "uses_device"})
+            
+        # Add links to UPIs
+        for upi in graph.worker_to_upis.get(wid, set()):
+            upi_node_id = f"u_{upi}"
+            # Add UPI node if not exists
+            if not any(n["id"] == upi_node_id for n in nodes):
+                nodes.append({
+                    "id": upi_node_id,
+                    "label": "UPI Account",
+                    "type": "upi"
+                })
+            links.append({"source": node_id, "target": upi_node_id, "type": "payout_to"})
+
     return {
         "graph_stats": stats,
         "shared_devices": shared_devices,
         "shared_upis": shared_upis,
+        "vis_data": {
+            "nodes": nodes,
+            "links": links
+        }
     }
 
 

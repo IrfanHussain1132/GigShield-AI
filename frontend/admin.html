@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" />
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         :root {
             /* SecureSync AI Design System - Admin Dark Mode Tokens */
@@ -685,32 +686,107 @@ async function loadFraudGraph() {
     container.innerHTML = `
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
             <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;text-align:center;">
-                <p style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">Workers</p>
-                <p style="font-size:24px;font-weight:800;margin-top:4px;">${stats.total_workers}</p>
+                <p style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">Active Nodes</p>
+                <p style="font-size:24px;font-weight:800;margin-top:4px;">${data.vis_data.nodes.length}</p>
             </div>
             <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;text-align:center;">
-                <p style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">Devices</p>
-                <p style="font-size:24px;font-weight:800;margin-top:4px;">${stats.total_devices}</p>
+                <p style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">Connections</p>
+                <p style="font-size:24px;font-weight:800;margin-top:4px;">${data.vis_data.links.length}</p>
             </div>
             <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;text-align:center;">
-                <p style="font-size:10px;color:var(--warning);text-transform:uppercase;letter-spacing:1px;">Shared Devices</p>
-                <p style="font-size:24px;font-weight:800;color:var(--warning);margin-top:4px;">${stats.shared_devices}</p>
+                <p style="font-size:10px;color:var(--warning);text-transform:uppercase;letter-spacing:1px;">Shared Links</p>
+                <p style="font-size:24px;font-weight:800;color:var(--warning);margin-top:4px;">${stats.shared_devices + stats.shared_upis}</p>
             </div>
             <div style="background:var(--danger-dim);padding:16px;border-radius:12px;text-align:center;">
                 <p style="font-size:10px;color:var(--danger);text-transform:uppercase;letter-spacing:1px;">Fraud Rings</p>
                 <p style="font-size:24px;font-weight:800;color:var(--danger);margin-top:4px;">${stats.fraud_rings_detected}</p>
             </div>
         </div>
-        ${stats.rings.length > 0 ? stats.rings.map(r => `
-            <div style="background:var(--danger-dim);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:16px;margin-bottom:12px;">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                    <span class="material-symbols-outlined" style="color:var(--danger);">warning</span>
-                    <span style="font-weight:700;color:var(--danger);">${r.risk_level} — ${r.ring_size} accounts</span>
+        <div id="d3-graph-container" style="width:100%; height:400px; background:rgba(0,0,0,0.2); border-radius:16px; border:1px solid var(--border); overflow:hidden; position:relative;">
+             <svg id="fraud-svg" style="width:100%; height:100%;"></svg>
+        </div>
+        <div style="margin-top:24px;">
+            ${stats.rings.length > 0 ? stats.rings.map(r => `
+                <div style="background:var(--danger-dim);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:16px;margin-bottom:12px;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                        <span class="material-symbols-outlined" style="color:var(--danger);">warning</span>
+                        <span style="font-weight:700;color:var(--danger);">${r.risk_level} — ${r.ring_size} accounts</span>
+                    </div>
+                    <p style="font-size:13px;color:var(--text-dim);">${r.reason}</p>
                 </div>
-                <p style="font-size:13px;color:var(--text-dim);">${r.reason}</p>
-            </div>
-        `).join('') : '<p style="color:var(--success);margin-top:16px;">✅ No fraud rings detected — all accounts clean</p>'}
+            `).join('') : '<p style="color:var(--success);margin-top:16px;">✅ No fraud rings detected — all physical devices verified</p>'}
+        </div>
     `;
+
+    renderD3FraudGraph(data.vis_data);
+}
+
+function renderD3FraudGraph(graph) {
+    const svg = d3.select("#fraud-svg");
+    const container = document.getElementById('d3-graph-container');
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    
+    svg.selectAll("*").remove();
+
+    const simulation = d3.forceSimulation(graph.nodes)
+        .force("link", d3.forceLink(graph.links).id(d => d.id).distance(60))
+        .force("charge", d3.forceManyBody().strength(-150))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("collision", d3.forceCollide().radius(20));
+
+    const link = svg.append("g")
+        .attr("stroke", "rgba(255,255,255,0.1)")
+        .attr("stroke-width", 1.5)
+        .selectAll("line")
+        .data(graph.links)
+        .join("line");
+
+    const node = svg.append("g")
+        .selectAll("g")
+        .data(graph.nodes)
+        .join("g")
+        .call(d3.drag()
+            .on("start", (event, d) => {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                d.fx = d.x; d.fy = d.y;
+            })
+            .on("drag", (event, d) => {
+                d.fx = event.x; d.fy = event.y;
+            })
+            .on("end", (event, d) => {
+                if (!event.active) simulation.alphaTarget(0);
+                d.fx = null; d.fy = null;
+            }));
+
+    node.append("circle")
+        .attr("r", d => d.type === 'worker' ? 10 : 6)
+        .attr("fill", d => {
+            if (d.type === 'worker') return d.risk > 0.5 ? 'var(--danger)' : 'var(--primary)';
+            if (d.type === 'device') return '#3b82f6';
+            return 'var(--warning)';
+        })
+        .attr("stroke", d => d.type === 'worker' ? 'white' : 'none')
+        .attr("stroke-width", 1.5);
+
+    node.append("text")
+        .text(d => d.type === 'worker' ? d.label : '')
+        .attr("x", 12)
+        .attr("y", 4)
+        .attr("fill", "var(--text-dim)")
+        .style("font-size", "10px")
+        .style("pointer-events", "none");
+
+    simulation.on("tick", () => {
+        link
+            .attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y);
+
+        node
+            .attr("transform", d => `translate(${d.x},${d.y})`);
+    });
 }
 
 async function loadWorkers() {
