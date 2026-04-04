@@ -187,14 +187,6 @@ const actions = {
 
   async verifyOtp() {
     const code = state.otp.join('');
-    
-    if (state.phase2MockOtpEnabled) {
-      console.log('[Bypass] Verifying locally for mock mode');
-      state.token = 'mock-dev-token';
-      window.localStorage.setItem('securesync_token', 'mock-dev-token');
-      router.navigate('verification_start');
-      return;
-    }
 
     try {
       const res = await api('/auth/verify-otp', {
@@ -215,13 +207,30 @@ const actions = {
     }
   },
 
+  selectPlatform(plat) {
+    state.platform = plat;
+    if (state.screen === 'verification_start') {
+      const container = document.getElementById('screen-container');
+      if (container) container.innerHTML = screens.verification_start(state);
+    } else {
+      router.navigate('verification_start');
+    }
+  },
+
   async verifyPartner() {
     const input = document.getElementById('partner-id-input');
-    if (input) state.partnerId = input.value;
+    if (input) state.partnerId = input.value.trim();
+
+    if (!state.partnerId) {
+      alert('Please enter a valid Partner ID first.');
+      return;
+    }
+
     try {
       const res = await api('/workers/verify', {
         method: 'POST',
-        body: JSON.stringify({ partner_id: state.partnerId, platform: state.platform }),
+        throwOnError: true,
+        body: JSON.stringify({ partner_id: state.partnerId, platform: state.platform || 'swiggy' }),
       }, state);
       if (res?.status === 'ACTIVE') {
         Object.assign(state.user, {
@@ -230,7 +239,14 @@ const actions = {
         });
         router.navigate('verification_score');
       }
-    } catch (e) { alert('Verification failed.'); }
+    } catch (e) {
+      if (e.status === 401) {
+        alert('Session expired. Please log in again.');
+        actions.logout();
+      } else {
+        alert(e.detail || 'Verification failed. Please check your Partner ID.');
+      }
+    }
   },
 
   async goToPremium() {
@@ -370,7 +386,11 @@ async function boot() {
       if (me?.worker_id) {
         state.partnerId = me.partner_id;
         state.user.name = me.name;
-        actions.goToDashboard();
+        if (me.is_verified) {
+          actions.goToDashboard();
+        } else {
+          router.navigate('verification_start');
+        }
         return;
       }
     } catch (e) {

@@ -1,11 +1,13 @@
 // Premium, UPI Payment, and Confirmation screens
 import { t, formatCurrency } from '../utils/i18n.js';
 
-const PROFILE_IMG2 = 'https://lh3.googleusercontent.com/aida-public/AB6AXuDUyjAKTSB3DJ0SnbLysrDnpyALwaU_76nFlCZWVvl5-0ourjFWwe7DnagVQXs5VwRrqx3l6vDOIdYaLHNnpnSk7RjzfVX7VmOI-POPbMGpGVoQU6aU7Nx-zoT5P4s0DhiogBCJJJUXQYRj3Eb8-lh74MFdZfm603nrCSiaGDQh7Wq3bRRQif_tYaQ0CWNV_P_Gq7vyw66aJd1VUft9XpizBtu8DmNoTqSG6ZK46yBDMs1edBZXQ2de3EVa5eJ4_7bAFwF1REINMHgh';
-const PROFILE_IMG3 = 'https://lh3.googleusercontent.com/aida-public/AB6AXuDXh7dX960rpsNLSMZL-6nJSX9Rb3zNY4E0tqYY_P9OncLSXJZjy9PV5Roj6rQ1gu4OBRgeRVH2JwkQ6UdLFbJubGxU6VhtAHzy1O7zM8OqjW3NXoe-jzk-4cdLmeIZYdSbZzLWu6XOWqlknBTaS1MGaO2yuGECo0fggnu9JnQou2VJrEC3Erf9YPoa4CCzFacAg-Kr36YPRVAQRILV2jPvxG_mqc7bzXN1zTzrqh1REwIqSUErYFxtEx4aHU6Zve6pj4Nlp2AnyD7q';
 const RAZORPAY_IMG = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBRx9kiog-jbeMvERoPn0nj8z9OgTb-tTP26jY4rYUK9AFuoir6WU6HYTB0zychn03VprUtCV5dsVur9Uh_UmT97zbj1fZe31VZSVM8DLpf4_ztCUIqZibCr87l3pYWwkMfQZ66hX5zAuX7qsov7yL5W6Jif47BPLTJWbWwsPIKpaPE1xHKCpUXwFeZfIxCgONfIrt2rRx0KeHrRdGyYXG6BbcrmTi69vVNuYb4AI6osaLmJ4KFa4Av_zvUutCK_C8DyB7UgiIdZFdK';
 const RAZORPAY_LOGO = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBjUOUpR5wNC3bZNBGb1O1LM2OvCR3xGm8GKyuk51Qsq1QBij8GdhRg53stGUjiA4H4hvy0I0zOY8mRSh9SY5ftTHWVPnAIGy7mkuUSyx5pPloS7bAAKUVkZ2_fV18VPRrIzETOlSbnZLfBnrEoeknoahvZK4cn83dXxi3VyQgPhlkWpfzUCyRX-Nj9-_QstZZkEw2Nhtl-RjDVF6kFRjyPkHW5hgjip9f4iBWgIzhx2DPCdTWGdf668EaB9ez1BX_Le1AeqT68lJ3p';
-const CONFIRM_IMG = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAAhENz6AIJofPK8a9ULr0xHBHaEXFYDW84m83G52LhJqWXHUxM9CXfGpr_VJjkQrpuvFmprmgc6YErlOmuK1qYtefskNRliMOU8L1SZejeIDbxihqCz8SW54DXyN_2n-O0VdKCNMpns72vi0P3_tmxJboX-dcqZSUZopxw6QKs_A2sn2hxXS8FX-LWbr3kLufBm8vyr-dMh7h9ssvdcbh1kkiRnJBDBu3taXe86uT1y9JvsbTTJHFAcSYJCOdkOgnowQsO6ViVuYPH';
+
+function renderAvatar(state) {
+  const initial = (state.user?.name || 'Partner').charAt(0).toUpperCase();
+  return `<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-black text-lg shadow-sm border border-white/20">${initial}</div>`;
+}
 
 export function premiumScreen(state) {
   const score = Math.max(0, Math.min(Number(state.user.score || 82), 99));
@@ -35,26 +37,26 @@ export function premiumScreen(state) {
 
   const adjRows = adjustments.map((a) => {
     const isPositive = a.value > 0;
-    const colorClass = isPositive ? 'text-primary' : 'text-green-600';
-    const iconColor = isPositive ? 'text-primary' : 'text-green-600';
+    const colorClass = isPositive ? 'text-on-surface' : 'text-primary';
+    const iconColor = isPositive ? 'text-on-surface' : 'text-primary';
     const prefix = isPositive ? '+' : '-';
     return `
-      <div class="flex items-center justify-between py-1.5">
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-xl bg-white flex items-center justify-center border border-outline-variant/10 shadow-sm">
+      <div class="flex items-center justify-between py-1.5 gap-2">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-8 h-8 shrink-0 rounded-xl bg-white flex items-center justify-center border border-outline-variant/10 shadow-sm">
             <span class="material-symbols-outlined ${iconColor} text-[18px]">${a.icon}</span>
           </div>
-          <span class="font-bold text-sm text-on-surface">${a.label}</span>
+          <span class="font-bold text-sm text-on-surface leading-snug break-words">${a.label}</span>
         </div>
-        <span class="${colorClass} font-black text-sm">${prefix}${formatCurrency(Math.abs(a.value))}</span>
+        <span class="${colorClass} font-black text-sm whitespace-nowrap shrink-0">${prefix}${formatCurrency(Math.abs(a.value))}</span>
       </div>`;
   }).join('');
 
   return `
-<div class="min-h-full bg-surface flex flex-col overflow-x-hidden">
+<div class="min-h-full bg-surface flex flex-col">
   <header class="flex justify-between items-center w-full px-6 py-4 bg-white/60 backdrop-blur-md sticky top-0 z-20">
     <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-full border-2 border-primary/20 p-0.5"><img alt="Worker" class="w-full h-full rounded-full object-cover" src="${PROFILE_IMG2}"/></div>
+      ${renderAvatar(state)}
       <h1 class="font-headline font-black tracking-tighter text-primary text-xl">SecureSync AI</h1>
     </div>
     <button class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-primary shadow-sm" aria-label="Notifications"><span class="material-symbols-outlined">notifications</span></button>
@@ -70,9 +72,10 @@ export function premiumScreen(state) {
     </div>
 
     <div class="mb-10">
-      <div class="inline-flex items-center bg-green-600 text-white px-5 py-2 rounded-full gap-2 shadow-lg shadow-green-600/20 border-2 border-white/20">
-        <span class="material-symbols-outlined text-[18px] scale-110" style="font-variation-settings:'FILL' 1;">verified</span>
-        <span class="font-headline font-black text-sm tracking-tight">${score} - Strong</span>
+      <div class="inline-flex items-center bg-gradient-to-r from-primary to-primary-container text-white px-5 py-2.5 rounded-full gap-2 shadow-xl shadow-primary/20 border border-white/20 relative overflow-hidden group">
+        <div class="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+        <span class="material-symbols-outlined text-[20px] drop-shadow-md text-tertiary-fixed-dim" style="font-variation-settings:'FILL' 1;">verified</span>
+        <span class="font-headline font-black text-[15px] tracking-tight truncate drop-shadow-sm">${score} - ${score >= 90 ? 'Excellent' : score >= 80 ? 'Strong' : 'Good'}</span>
       </div>
     </div>
 
@@ -82,41 +85,73 @@ export function premiumScreen(state) {
     </section>
 
     <div class="grid grid-cols-2 gap-4 mb-10">
-      <button type="button" onclick="actions.selectTier('basic')" class="${stdSel ? 'bg-white border-2 border-primary shadow-2xl shadow-primary/10 scale-[1.02]' : 'bg-surface-container border-2 border-transparent'} rounded-[2rem] p-5 transition-all duration-300 text-left relative overflow-hidden group">
+      <button type="button" onclick="actions.selectTier('basic')" class="${stdSel ? 'bg-white border-primary shadow-2xl shadow-primary/10 scale-[1.02]' : 'bg-surface-container border-transparent opacity-80 hover:opacity-100'} border-2 rounded-[2rem] p-5 transition-all duration-300 text-left relative overflow-hidden group">
+        ${stdSel ? '<div class="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-bl-[4rem] -z-10"></div>' : ''}
         <div class="flex justify-between items-start mb-4 relative z-10">
-          <span class="${stdSel ? 'bg-primary/10 text-primary' : 'bg-on-surface/5 text-on-surface-variant'} text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border ${stdSel ? 'border-primary/20' : 'border-on-surface/5'}">Basic</span>
-          ${stdSel ? '<span class="material-symbols-outlined text-primary text-[24px]" style="font-variation-settings:\'FILL\' 1;">check_circle</span>' : '<div class="w-6 h-6 rounded-full border-2 border-outline-variant"></div>'}
+          <span class="${stdSel ? 'bg-primary/10 text-primary border-primary/20' : 'bg-on-surface/5 text-on-surface-variant border-on-surface/5'} text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border shadow-sm">Basic</span>
+          ${stdSel ? '<span class="material-symbols-outlined text-primary text-[24px] drop-shadow-sm" style="font-variation-settings:\'FILL\' 1;">check_circle</span>' : '<div class="w-6 h-6 rounded-full border-2 border-outline-variant/60 shadow-inner"></div>'}
         </div>
         <div class="relative z-10">
-            <div class="flex items-baseline font-noto mb-1"><span class="text-2xl font-black text-on-surface">${formatCurrency(basicAmount)}</span><span class="text-[10px] text-on-surface-variant font-bold opacity-60 ml-1">${t('weekly_coverage') || '/wk'}</span></div>
-            <p class="text-[11px] text-on-surface-variant font-bold leading-tight opacity-70">Focuses on rain and weather income protection</p>
+            <div class="flex items-baseline font-noto mb-1"><span class="text-2xl font-black text-on-surface shadow-sm">${formatCurrency(basicAmount)}</span><span class="text-[10px] text-on-surface-variant font-bold opacity-60 ml-1">${t('weekly_coverage') || '/wk'}</span></div>
+            <p class="text-[11px] text-on-surface-variant font-bold leading-tight opacity-75">Focuses on rain & extreme weather protection</p>
         </div>
       </button>
 
-      <button type="button" onclick="actions.selectTier('premium')" class="${plusSel ? 'bg-white border-2 border-amber-500 shadow-2xl shadow-amber-500/15 scale-[1.02]' : 'bg-surface-container border-2 border-transparent'} rounded-[2rem] p-5 transition-all duration-300 text-left relative overflow-hidden group">
+      <button type="button" onclick="actions.selectTier('premium')" class="${plusSel ? 'bg-gradient-to-br from-[#FFFCF5] to-white border-[#F59E0B] shadow-2xl shadow-amber-500/20 scale-[1.02]' : 'bg-surface-container border-transparent opacity-80 hover:opacity-100'} border border-2 rounded-[2rem] p-5 transition-all duration-300 text-left relative overflow-hidden group">
+        ${plusSel ? '<div class="absolute -top-10 -right-10 w-32 h-32 bg-amber-500/10 blur-2xl rounded-full"></div>' : ''}
         <div class="flex justify-between items-start mb-4 relative z-10">
-          <span class="${plusSel ? 'bg-amber-100 text-amber-800' : 'bg-on-surface/5 text-on-surface-variant'} text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border ${plusSel ? 'border-amber-200' : 'border-on-surface/5'}">Premium</span>
-          ${plusSel ? '<span class="material-symbols-outlined text-amber-500 text-[24px]" style="font-variation-settings:\'FILL\' 1;">check_circle</span>' : '<div class="w-6 h-6 rounded-full border-2 border-outline-variant"></div>'}
+          <span class="${plusSel ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-on-surface/5 text-on-surface-variant border-on-surface/5'} text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border shadow-sm">Premium</span>
+          ${plusSel ? '<span class="material-symbols-outlined text-amber-500 text-[24px] drop-shadow-sm animate-pulse" style="font-variation-settings:\'FILL\' 1;">check_circle</span>' : '<div class="w-6 h-6 rounded-full border-2 border-outline-variant/60 shadow-inner"></div>'}
         </div>
         <div class="relative z-10">
-            <div class="flex items-baseline font-noto mb-1"><span class="text-2xl font-black text-on-surface">₹${premiumAmount}</span><span class="text-[10px] text-on-surface-variant font-bold opacity-60 ml-1">/wk</span></div>
-            <p class="text-[11px] text-on-surface-variant font-bold leading-tight opacity-70">Adds fog, traffic gridlock, and platform cover</p>
+            <div class="flex items-baseline font-noto mb-1"><span class="text-2xl font-black text-on-surface shadow-sm">${formatCurrency(premiumAmount)}</span><span class="text-[10px] text-on-surface-variant font-bold opacity-60 ml-1">/wk</span></div>
+            <p class="text-[11px] text-on-surface-variant font-bold leading-tight opacity-75">Adds fog, traffic, and platform outage cover</p>
         </div>
-      </button>
-    </div>
       </button>
     </div>
 
+    <section class="mb-10">
+      <div class="flex items-center justify-between mb-4 px-1">
+        <h3 class="font-headline font-black text-xl text-on-surface tracking-tight">${t('whats_covered') || 'What\'s Covered'}</h3>
+        <span class="text-[10px] font-black uppercase text-primary bg-primary/5 border border-primary/10 px-2 py-1 rounded-md">Max ₹4,080 /wk</span>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        ${(stdSel ? [
+          { icon: 'rainy', label: 'Heavy Rain', color: 'text-primary', payout: 408 },
+          { icon: 'foggy', label: 'Dense Fog', color: 'text-slate-500', payout: 408 }
+        ] : [
+          { icon: 'rainy', label: 'Heavy Rain', color: 'text-primary', payout: 408 },
+          { icon: 'air', label: 'Severe AQI', color: 'text-secondary', payout: 510 },
+          { icon: 'thermostat', label: 'Heat Wave', color: 'text-orange-500', payout: 612 },
+          { icon: 'flood', label: 'Red Alert', color: 'text-red-600', payout: 816 },
+          { icon: 'foggy', label: 'Dense Fog', color: 'text-slate-500', payout: 408 },
+          { icon: 'lock_clock', label: 'Bandh', color: 'text-on-surface', payout: 816 }
+        ]).map(t => `
+          <div class="bg-white p-4 rounded-[20px] shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-outline-variant/10 flex flex-col justify-between transition-transform duration-300 hover:-translate-y-1">
+            <div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center mb-3">
+              <span class="material-symbols-outlined ${t.color} text-[18px]">${t.icon}</span>
+            </div>
+            <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest mb-1.5">${t.label}</span>
+            <span class="text-lg font-black text-on-surface">₹${t.payout.toLocaleString('en-IN')}<span class="text-[10px] font-bold opacity-60 ml-1">/event</span></span>
+          </div>`).join('')}
+      </div>
+    </section>
+  </main>
+
+  <footer class="mt-auto px-6 py-6 bg-gradient-to-t from-surface via-surface to-transparent shadow-[0_-20px_40px_rgba(252,249,248,0.9)] z-10 sticky bottom-0">
     <div class="space-y-4">
-      <button onclick="actions.buyPolicy()" class="btn btn-primary">
-        ${t('buy_weekly')} - ₹${amt}
+      <button onclick="actions.buyPolicy()" class="btn btn-primary h-20 w-full rounded-[28px] shadow-2xl shadow-primary/30 pointer-events-auto active:scale-95 transition-transform flex items-center px-8">
+        <span class="flex-1 text-left font-black uppercase tracking-widest text-sm">${t('buy_weekly') || 'Buy Weekly Cover'}</span>
+        <div class="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-2xl backdrop-blur-sm border border-white/10 shadow-inner">
+          <span class="font-black text-lg">${formatCurrency(amt)}</span>
+        </div>
       </button>
-      <div class="flex items-center justify-center gap-2 text-on-surface-variant opacity-80">
+      <div class="flex items-center justify-center gap-2 text-on-surface-variant opacity-80 pb-2">
         <span class="material-symbols-outlined text-[16px]">autorenew</span>
         <p class="font-body text-[11px] font-medium tracking-tight">${t('autopay_description') || 'Charged every Monday via UPI AutoPay.'}</p>
       </div>
     </div>
-  </main>
+  </footer>
 </div>`;
 }
 
@@ -128,7 +163,7 @@ export function upiScreen(state) {
   const endDate = state.policy?.endDate || 'Sun 30 Mar';
 
   return `
-<div class="min-h-full bg-surface flex flex-col overflow-x-hidden">
+<div class="min-h-full bg-surface flex flex-col">
   <header class="top-shell flex items-center justify-between px-4 py-3 w-full">
     <div class="flex items-center gap-3">
       <button onclick="actions.goToPremium()" aria-label="Back to premium" class="material-symbols-outlined text-primary active:scale-95 duration-200">arrow_back</button>
@@ -136,7 +171,7 @@ export function upiScreen(state) {
     </div>
     <div class="flex items-center gap-3">
       <button class="icon-btn" aria-label="Notifications"><span class="material-symbols-outlined text-primary">notifications</span></button>
-      <div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden"><img alt="Profile" class="w-full h-full object-cover" src="${PROFILE_IMG3}"/></div>
+      ${renderAvatar(state)}
     </div>
   </header>
 
@@ -187,6 +222,7 @@ export function upiScreen(state) {
           >
             ${state.purchaseInFlight ? `<span class="animate-spin material-symbols-outlined">sync</span> ${t('processing')}...` : `<span class="material-symbols-outlined">account_balance_wallet</span>${t('pay_via_upi')}`}
           </button>
+          
         </div>
       </div>
     </section>
@@ -203,20 +239,22 @@ export function upiScreen(state) {
   </main>
 
   <div style="position:sticky;bottom:0;left:0;right:0;z-index:40;padding:12px 16px calc(16px + env(safe-area-inset-bottom));background:linear-gradient(to top,#fcf9f8 60%,rgba(252,249,248,0));">
-    <button 
-      onclick="actions.activateCoverage()" 
-      ${state.purchaseInFlight ? 'disabled' : ''}
-      class="w-full bg-gradient-to-r from-primary to-primary-container text-white font-headline font-bold text-lg py-5 rounded-3xl shadow-xl shadow-primary/20 flex items-center justify-center gap-3 haptic-pulse duration-200 ${state.purchaseInFlight ? 'opacity-80' : ''}"
-    >
-      ${state.purchaseInFlight ? `<span class="animate-spin material-symbols-outlined">sync</span> ${t('processing')}...` : `${t('activate_coverage')} - ₹${amt} <span class="material-symbols-outlined">arrow_forward</span>`}
-    </button>
+    <div class="flex gap-2">
+      <button 
+        onclick="actions.activateCoverage()" 
+        ${state.purchaseInFlight ? 'disabled' : ''}
+        class="flex-1 bg-gradient-to-r from-primary to-primary-container text-white font-headline font-bold text-lg py-5 rounded-3xl shadow-xl shadow-primary/20 flex items-center justify-center gap-3 haptic-pulse duration-200 ${state.purchaseInFlight ? 'opacity-80' : ''}"
+      >
+        ${state.purchaseInFlight ? `<span class="animate-spin material-symbols-outlined">sync</span> ${t('processing')}...` : `${t('activate_coverage')} - ₹${amt} <span class="material-symbols-outlined">arrow_forward</span>`}
+      </button>
+    </div>
   </div>
 </div>`;
 }
 
 export function confirmationScreen(state) {
   const score = Math.max(0, Math.min(Number(state.user.score || 82), 99));
-  const policyId = state.policy?.id || '#SS-8829-IND';
+  const policyId = state.policy?.policy_id || '#SS-8829-IND';
   const startDate = state.policy?.startDate || 'Monday 24 March';
   const endDate = state.policy?.endDate || 'Sunday 30 March';
   const perEvent = state.policy?.maxPayout || 408;
@@ -233,11 +271,11 @@ export function confirmationScreen(state) {
   ];
 
   return `
-<div class="min-h-full bg-surface flex flex-col overflow-x-hidden">
+<div class="min-h-full bg-surface flex flex-col">
   <header class="top-shell">
     <div class="flex items-center justify-between px-4 py-3 w-full">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden"><img alt="Profile" class="w-full h-full object-cover" src="${CONFIRM_IMG}"/></div>
+        ${renderAvatar(state)}
         <span class="font-headline font-black tracking-tight text-primary text-lg">SecureSync AI</span>
       </div>
       <button class="icon-btn" aria-label="Notifications"><span class="material-symbols-outlined">notifications</span></button>

@@ -16,11 +16,11 @@ export function onboardingScreen(state) {
 
   <div id="onb-slider" class="flex overflow-x-auto snap-x hide-scrollbar flex-1" style="scroll-snap-type:x mandatory;">
     <section class="min-w-full snap-center flex flex-col items-center px-6 pt-4">
-      <div class="w-full rounded-[36px] overflow-hidden mb-6 relative" style="height:420px;">
-        <img class="w-full h-full object-cover" src="/images/delivery.jpg" alt="Delivery partner on motorcycle" />
-        <div class="absolute bottom-5 left-1/2 -translate-x-1/2 bg-white rounded-3xl px-7 py-4 shadow-lg flex flex-col items-center">
-          <span class="material-symbols-outlined text-error text-xl mb-1" style="font-variation-settings:'FILL' 1;">cloud_off</span>
-          <div class="flex items-baseline gap-1"><span class="font-headline font-black text-5xl text-on-surface">${formatCurrency(0)}</span></div>
+      <div class="w-full rounded-[36px] overflow-hidden mb-6 relative bg-cover bg-center" style="height:420px; background-image: url('/images/onboarding.jpg');">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+        <div class="absolute bottom-5 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-md rounded-3xl px-7 py-4 shadow-2xl flex flex-col items-center border border-white/40 shadow-surface-container/50">
+          <span class="material-symbols-outlined text-error text-2xl mb-1 drop-shadow-sm" style="font-variation-settings:'FILL' 1;">cloud_off</span>
+          <div class="flex items-baseline gap-1"><span class="font-headline font-black text-5xl text-on-surface drop-shadow-sm">${formatCurrency(0)}</span></div>
           <span class="text-[10px] font-bold text-outline uppercase tracking-widest mt-1">${t('today_earnings')}</span>
         </div>
       </div>
@@ -29,11 +29,12 @@ export function onboardingScreen(state) {
     </section>
 
     <section class="min-w-full snap-center flex flex-col items-center px-6 pt-4">
-      <div class="w-full rounded-[36px] overflow-hidden mb-6 relative bg-primary-container/10 flex items-center justify-center" style="height:420px;">
-        <div class="text-center p-8">
-          <span class="material-symbols-outlined text-primary text-8xl mb-4" style="font-variation-settings:'FILL' 1;">shield_with_heart</span>
-          <div class="flex items-baseline justify-center gap-1 mb-2"><span class="font-headline font-black text-5xl text-primary">${formatCurrency(47)}</span></div>
-          <span class="text-sm font-bold text-primary uppercase tracking-widest">${t('weekly_coverage') || '/week coverage'}</span>
+      <div class="w-full rounded-[36px] overflow-hidden mb-6 relative bg-gradient-to-br from-primary-container/20 to-primary/5 flex items-center justify-center border border-primary/10 shadow-inner" style="height:420px;">
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/40 via-transparent to-transparent"></div>
+        <div class="text-center p-8 relative z-10 bg-white/40 backdrop-blur-xl rounded-[32px] shadow-2xl shadow-primary/10 border border-white/60 mx-4">
+          <span class="material-symbols-outlined text-primary text-7xl mb-4 drop-shadow-md" style="font-variation-settings:'FILL' 1;">shield_with_heart</span>
+          <div class="flex items-baseline justify-center gap-1 mb-2"><span class="font-headline font-black text-5xl text-primary drop-shadow-sm">${formatCurrency(47)}</span></div>
+          <span class="text-sm font-bold text-primary uppercase tracking-widest bg-primary/10 px-3 py-1 rounded-lg">${t('weekly_coverage') || '/week coverage'}</span>
         </div>
       </div>
       <h2 class="font-headline font-black text-3xl text-center text-on-surface leading-tight mb-4">${t('onboarding_title_2') || '8 triggers.<br/>Zero paperwork.'}</h2>
@@ -41,11 +42,14 @@ export function onboardingScreen(state) {
     </section>
 
     <section class="min-w-full snap-center flex flex-col items-center px-6 pt-4">
-      <div class="w-full rounded-[36px] overflow-hidden mb-6 relative bg-tertiary-fixed/20 flex items-center justify-center" style="height:420px;">
-        <div class="text-center p-8">
-          <span class="material-symbols-outlined text-tertiary text-8xl mb-4" style="font-variation-settings:'FILL' 1;">bolt</span>
-          <p class="font-headline font-extrabold text-2xl text-tertiary-container mb-2">Under 2 Minutes</p>
-          <span class="text-sm font-bold text-on-surface-variant uppercase tracking-widest">${t('trigger_to_upi') || 'Trigger to UPI credit'}</span>
+      <div class="w-full rounded-[36px] overflow-hidden mb-6 relative bg-gradient-to-br from-tertiary-fixed/40 to-tertiary/10 flex items-center justify-center border border-tertiary/10 shadow-inner" style="height:420px;">
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-white/40 via-transparent to-transparent"></div>
+        <div class="text-center p-8 relative z-10 bg-white/40 backdrop-blur-xl rounded-[32px] shadow-2xl shadow-tertiary/10 border border-white/60 mx-4 w-[85%]">
+          <div class="w-24 h-24 bg-gradient-to-tr from-tertiary to-tertiary-container rounded-full flex items-center justify-center mx-auto mb-5 shadow-lg shadow-tertiary/30 inset-0">
+            <span class="material-symbols-outlined text-white text-5xl drop-shadow-md" style="font-variation-settings:'FILL' 1;">bolt</span>
+          </div>
+          <p class="font-headline font-extrabold text-2xl text-tertiary-container mb-2 drop-shadow-sm">Under 2 Mins</p>
+          <span class="text-[11px] font-black text-tertiary/80 uppercase tracking-widest">${t('trigger_to_upi') || 'Trigger to UPI credit'}</span>
         </div>
       </div>
       <h2 class="font-headline font-black text-3xl text-center text-on-surface leading-tight mb-4">${t('onboarding_title_3') || 'Money hits your UPI.<br/>Automatically.'}</h2>
@@ -123,8 +127,6 @@ export function otpScreen(state) {
       <label class="text-base font-bold text-on-surface">${t('enter_6_digit') || 'Enter the 6-digit code'}</label>
       <span id="otp-timer" class="text-sm font-bold text-secondary-container bg-secondary-container/10 px-3 py-1 rounded-lg">01:54</span>
     </div>
-
-    ${state.phase2MockOtpEnabled ? `<div class="mb-3 text-xs font-semibold text-primary bg-primary/10 rounded-lg px-3 py-2">Phase 2 demo mode: enter ANY 6 digits to verify</div>` : ''}
 
     <div class="flex gap-3 justify-between mb-6">${otpInputs}</div>
 

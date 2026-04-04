@@ -32,7 +32,7 @@ const translations = {
     "air": "Air",
     "temp": "Temp",
     "view": "View",
-    "neural_shield": "Neural Shield Active",
+    "neural_shield": "Income Protection Active",
     "protection_inactive": "Protection Not Active",
     "activate": "Activate",
     "this_month": "This Month",
@@ -59,7 +59,7 @@ const translations = {
     "good": "Good",
     "building": "Building",
     "membership": "Membership",
-    "base_zone": "Base Zone",
+    "base_zone": "Base Ward",
     "verification_score": "Verification Score",
     "score": "Score",
     "safety": "Safety",
@@ -73,7 +73,7 @@ const translations = {
     "policy_desc": "Coverage Plans · Triggers · Payouts",
     "sign_out": "Sign Out",
     
-    // Verification
+    // Verification & Purchase
     "partner_id": "Partner ID",
     "confirm_details": "Confirm Details",
     "select_platform": "Select Platform",
@@ -86,6 +86,8 @@ const translations = {
     "verify_partner_id": "Verify Partner ID",
     "potential_payout": "Potential Premium Payout",
     "looks_right_continue": "Looks right - Continue",
+    "why_you_pay": "Why you pay",
+    "whats_covered": "What's Covered",
     
     // Onboarding
     "onboarding_title_1": "When the rain comes,<br/>the money should too.",
@@ -162,7 +164,7 @@ const translations = {
     "air": "గాలి",
     "temp": "ఉష్ణోగ్రత",
     "view": "వీక్షణ",
-    "neural_shield": "న్యూరల్ షీల్డ్ సక్రియంగా ఉంది",
+    "neural_shield": "ఆదాయ రక్షణ సక్రియంగా ఉంది",
     "protection_inactive": "రక్షణ సక్రియంగా లేదు",
     "activate": "సక్రియం చేయి",
     "this_month": "ఈ నెల",
@@ -189,7 +191,7 @@ const translations = {
     "good": "మంచిది",
     "building": "నిర్మిస్తున్నారు",
     "membership": "సభ్యత్వం",
-    "base_zone": "బేస్ జోన్",
+    "base_zone": "బేస్ వార్డ్",
     "verification_score": "ధృవీకరణ స్కోరు",
     "score": "స్కోరు",
     "safety": "భద్రత",
@@ -216,6 +218,7 @@ const translations = {
     "verify_partner_id": "భాగస్వామి ID ని ధృవీకరించు",
     "potential_payout": "సంభావ్య ప్రీమియం చెల్లింపు",
     "looks_right_continue": "సరిగ్గా ఉంది - కొనసాగించండి",
+    "whats_covered": "కవరేజ్ వివరాలు",
 
     // Onboarding
     "onboarding_title_1": "వర్షం పడితే,<br/>డబ్బులు కూడా పడాలి.",
@@ -292,7 +295,7 @@ const translations = {
     "air": "हवा",
     "temp": "तापमान",
     "view": "दृश्य",
-    "neural_shield": "न्यूरल शील्ड सक्रिय है",
+    "neural_shield": "आय सुरक्षा सक्रिय है",
     "protection_inactive": "सुरक्षा सक्रिय नहीं है",
     "activate": "सक्रिय करें",
     "this_month": "इस महीने",
@@ -319,7 +322,7 @@ const translations = {
     "good": "अच्छा",
     "building": "बन रहा है",
     "membership": "सदस्यता",
-    "base_zone": "बेस ज़ोन",
+    "base_zone": "बेस वार्ड",
     "verification_score": "सत्यापन स्कोर",
     "score": "स्कोर",
     "safety": "सुरक्षा",
@@ -346,6 +349,7 @@ const translations = {
     "verify_partner_id": "पार्टनर आईडी सत्यापित करें",
     "potential_payout": "संभावित प्रीमियम भुगतान",
     "looks_right_continue": "सही लग रहा है - जारी रखें",
+    "whats_covered": "कवरेज विवरण",
 
     // Onboarding
     "onboarding_title_1": "जब बारिश आए,<br/>तो पैसा भी आना चाहिए।",
@@ -449,7 +453,7 @@ const translations = {
     "good": "நல்லது",
     "building": "உருவாகிறது",
     "membership": "உறுப்பினர்",
-    "base_zone": "அடிப்படை மண்டலம்",
+    "base_zone": "அடிப்படை வார்டு",
     "verification_score": "சரிபார்ப்பு மதிப்பெண்",
     "score": "மதிப்பெண்",
     "safety": "பாதுகாப்பு",
@@ -476,6 +480,7 @@ const translations = {
     "verify_partner_id": "பங்குதாரர் ஐடியைச் சரிபார்க்கவும்",
     "potential_payout": "சாத்தியமான பிரீமியம் கொடுப்பனவு",
     "looks_right_continue": "சரியாக உள்ளது - தொடரவும்",
+    "whats_covered": "காப்பீடு விவரங்கள்",
 
     // Onboarding
     "onboarding_title_1": "மழை பெய்யும் போது,<br/>பணமும் பெய்ய வேண்டும்.",
@@ -554,6 +559,5 @@ export function formatCurrency(amount) {
 export const supportedLanguages = [
   { code: 'en', name: 'English', font: 'Inter' },
   { code: 'te', name: 'తెలుగు', font: 'Noto Sans Telugu' },
-  { code: 'hi', name: 'हिन्दी', font: 'Noto Sans Devanagari' },
-  { code: 'ta', name: 'தமிழ்', font: 'Noto Sans Tamil' }
+  { code: 'hi', name: 'हिन्दी', font: 'Noto Sans Devanagari' }
 ];

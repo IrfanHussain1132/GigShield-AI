@@ -87,10 +87,11 @@ export function homeScreen(state) {
   const riskTiles = hourlyForecast.slice(0, 3).map((item) => {
     const isPeak = Number(item?.probability || 0) >= 70;
     return `
-      <div class="rounded-[26px] p-4 ${isPeak ? 'bg-secondary-container text-on-secondary-container shadow-[0_8px_20px_rgba(126,87,0,0.22)] ring-2 ring-secondary-fixed-dim/30' : 'bg-surface-container-low text-on-surface border border-outline-variant/10'}">
-        <p class="text-sm font-bold ${isPeak ? 'text-on-secondary-container/70' : 'text-outline'}">${item.time || 'Now'}</p>
-        <div class="my-2"><span class="material-symbols-outlined text-[26px] ${isPeak ? 'text-on-secondary-container' : 'text-primary'}">${item.icon || 'partly_cloudy_day'}</span></div>
-        <p class="text-[32px] font-headline font-black leading-none">${item.probability || 0}<span class="text-lg">%</span></p>
+      <div class="rounded-[26px] p-4 flex flex-col items-center justify-center transition-all ${isPeak ? 'bg-gradient-to-br from-secondary-container to-[#ffefd6] text-on-secondary-container shadow-[0_8px_20px_rgba(126,87,0,0.15)] ring-2 ring-secondary-fixed-dim/30 hover:-translate-y-1 relative overflow-hidden' : 'bg-surface-container-low text-on-surface border border-outline-variant/10 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:bg-white hover:shadow-md hover:-translate-y-0.5'}">
+        ${isPeak ? '<div class="absolute inset-0 bg-white/20"></div>' : ''}
+        <p class="text-[11px] font-black uppercase tracking-widest ${isPeak ? 'text-on-secondary-container/80' : 'text-outline'} relative z-10">${item.time || 'Now'}</p>
+        <div class="my-2.5 relative z-10"><span class="material-symbols-outlined text-[32px] drop-shadow-sm ${isPeak ? 'text-on-secondary-container' : 'text-primary'}" style="font-variation-settings: 'FILL' 1;">${item.icon || 'partly_cloudy_day'}</span></div>
+        <p class="text-[28px] font-headline font-black leading-none tracking-tighter relative z-10">${item.probability || 0}<span class="text-sm font-bold opacity-60 ml-0.5">%</span></p>
       </div>`;
   }).join('');
 
@@ -98,8 +99,8 @@ export function homeScreen(state) {
 <div class="min-h-full bg-stone-50/50 flex flex-col pb-32">
   <header class="top-shell px-6 py-4 flex justify-between items-center">
     <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center overflow-hidden">
-        <img alt="Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuARIoPuacA6g_vTxGE5JTqlFuF120n_Ytl_Z-uNMhcnWDv687d_xBcSYnJBey7fZtjAsM4LUrk6hmOfWW-PQ4-TsX-H9NXfhO1x4u4FdPNuV2IQVmFzxKn19ITXB8vromjQYoh3WuqP91hU5JH1KxOFCV-nykiy6d2voNJG5Ccl5BJ7gVbzzgJR_yQ4TqtWgolxabOHnb6UqfFHWC5pZb8My15rDD32L3J9O3L4UJc6fFdfKEMoR8-1fi8acT3lclkJ1Udo0LIf4mjE"/>
+      <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-black text-lg shadow-sm border border-white/20">
+        ${name.charAt(0).toUpperCase()}
       </div>
       <div><h1 class="text-xs font-bold text-outline uppercase tracking-tighter">${t('good_morning')}</h1><p class="font-headline font-black text-lg text-on-surface leading-tight">${name}</p></div>
     </div>
@@ -184,62 +185,68 @@ export function homeScreen(state) {
     </section>
 
     <!-- Phase 3: LSTM 72-Hour Predictive Forecast -->
-    <section class="bg-surface-container-lowest rounded-[32px] p-6 shadow-sm border border-outline-variant/10 relative overflow-hidden">
-      <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/5 to-transparent rounded-bl-full"></div>
+    <section class="bg-surface-container-lowest rounded-[32px] p-6 shadow-sm border border-outline-variant/10 relative overflow-hidden group">
+      <div class="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-primary/5 to-transparent rounded-bl-full transition-transform duration-700 group-hover:scale-110"></div>
       <div class="relative z-10">
-        <div class="flex items-center gap-2 mb-1">
-          <span class="material-symbols-outlined text-primary text-lg">psychology</span>
-          <h3 class="font-headline font-black text-lg tracking-tight text-on-surface">${t('ai_forecast')}</h3>
-        </div>
-        <p class="text-[10px] font-bold text-outline uppercase tracking-widest mb-4">LSTM 72-HR NEURAL FORECAST</p>
-        
-        <div id="forecast-alert-strip" class="bg-surface-container-low rounded-2xl p-4 mb-4">
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <span class="material-symbols-outlined text-primary">query_stats</span>
+        <div class="flex items-center justify-between mb-5">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/5">
+              <span class="material-symbols-outlined text-primary text-[20px]">psychology</span>
             </div>
             <div>
-              <p class="text-sm font-bold text-on-surface" id="forecast-msg">${state.forecastAlert?.message || '✅ Low disruption risk for the next 72 hours.'}</p>
-              <p class="text-[10px] text-outline font-bold mt-0.5">${state.forecastAlert?.red_hours_72h || 0} red hours · ${state.forecastAlert?.orange_hours_72h || 0} elevated hours in 72h window</p>
-            </div>
-          </div>
-          <div class="flex gap-2">
-            <div class="flex-1 bg-surface-container-lowest rounded-xl p-3 text-center">
-              <p class="text-[9px] font-bold text-outline uppercase">6hr Risk</p>
-              <p class="text-lg font-black text-on-surface">${state.forecastAlert?.risk_percentage || 12}%</p>
-            </div>
-            <div class="flex-1 bg-surface-container-lowest rounded-xl p-3 text-center">
-              <p class="text-[9px] font-bold text-outline uppercase">Model</p>
-              <p class="text-sm font-black text-primary">LSTM v3</p>
-            </div>
-            <div class="flex-1 bg-surface-container-lowest rounded-xl p-3 text-center">
-              <p class="text-[9px] font-bold text-outline uppercase">${t('coverage')}</p>
-              <p class="text-sm font-black text-tertiary">${t('active') || 'Active'}</p>
+               <h3 class="font-headline font-black text-xl tracking-tight text-on-surface leading-none mb-1">${t('ai_forecast')}</h3>
+               <p class="text-[9px] font-black text-outline uppercase tracking-[0.2em]">LSTM 72-Hr Neural Forecast</p>
             </div>
           </div>
         </div>
         
-        <button onclick="actions.loadZoneDetails()" class="w-full bg-primary/5 hover:bg-primary/10 text-primary py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all border border-primary/10">
-          ${t('view_72h')} <span class="material-symbols-outlined text-base">arrow_forward</span>
+        <div id="forecast-alert-strip" class="bg-surface-container rounded-[24px] p-5 mb-5 shadow-inner border border-outline-variant/10">
+          <div class="flex items-start gap-4 mb-5">
+            <div class="w-12 h-12 shrink-0 rounded-2xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.04)] flex items-center justify-center border border-outline-variant/10">
+              <span class="material-symbols-outlined text-primary drop-shadow-sm text-[24px]" style="font-variation-settings: 'FILL' 1;">troubleshoot</span>
+            </div>
+            <div class="pt-1">
+              <p class="text-[14px] font-bold text-on-surface leading-snug" id="forecast-msg">${state.forecastAlert?.message || '<span class="text-primary material-symbols-outlined text-[16px] align-text-bottom mr-1" style="font-variation-settings: \'FILL\' 1;">check_circle</span>Low disruption risk for the next 72 hours.'}</p>
+              <p class="text-[10px] font-bold text-outline uppercase tracking-wider mt-2">${state.forecastAlert?.red_hours_72h || 0} red hours · ${state.forecastAlert?.orange_hours_72h || 0} elevated hrs in 72h</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <div class="bg-white rounded-2xl p-3 text-center shadow-sm border border-outline-variant/5 hover:shadow-md transition-shadow">
+              <p class="text-[9px] font-black text-outline uppercase tracking-wider mb-1">6hr Risk</p>
+              <p class="text-xl font-headline font-black text-on-surface tracking-tighter">${state.forecastAlert?.risk_percentage || 12}<span class="text-xs ml-0.5 opacity-60">%</span></p>
+            </div>
+            <div class="bg-white rounded-2xl p-3 text-center shadow-sm border border-outline-variant/5 hover:shadow-md transition-shadow">
+              <p class="text-[9px] font-black text-outline uppercase tracking-wider mb-1">Model</p>
+              <p class="text-sm font-headline font-black text-on-surface mt-1.5 opacity-90">LSTM v3</p>
+            </div>
+            <div class="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-3 text-center shadow-sm border border-primary/20">
+              <p class="text-[9px] font-black text-primary uppercase tracking-wider mb-1">${t('coverage')}</p>
+              <p class="text-sm font-headline font-black text-primary drop-shadow-sm mt-1.5">${t('active') || 'Active'}</p>
+            </div>
+          </div>
+        </div>
+        
+        <button onclick="actions.loadZoneDetails()" class="w-full bg-white hover:bg-surface-container-low text-primary py-4 rounded-[20px] font-black uppercase text-[11px] tracking-[0.15em] flex items-center justify-center gap-2 transition-all border border-outline-variant/20 shadow-[0_4px_14px_rgba(0,0,0,0.03)] active:scale-95 group">
+          ${t('view_72h')} <span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
         </button>
-      </div>
     </section>
 
     <!-- Phase 3: Live Disruption Zone Map -->
-    <section class="bg-gradient-to-br from-[#0a1628] to-[#0d1f3c] rounded-[32px] p-6 relative overflow-hidden shadow-xl">
-      <div class="absolute inset-0 opacity-10" style="background:radial-gradient(circle at 30% 50%, rgba(0,212,170,0.3), transparent 50%), radial-gradient(circle at 70% 30%, rgba(59,130,246,0.2), transparent 40%);"></div>
+    <section class="bg-[#0b131e] rounded-[32px] p-7 relative overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.15)] ring-1 ring-white/10 mt-6">
+      <div class="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/20 via-transparent to-transparent"></div>
+      <div class="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-blue-500/20 via-transparent to-transparent"></div>
       <div class="relative z-10">
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center justify-between mb-6">
           <div>
-            <h3 class="font-headline font-bold text-lg text-white">Live Disruption Map</h3>
-            <p class="text-white/50 text-xs">6 zones · Real-time monitoring</p>
+            <h3 class="font-headline font-black text-xl text-white tracking-tight leading-none mb-1.5">Live Disruption Map</h3>
+            <p class="text-white/40 text-[11px] font-bold tracking-widest uppercase">6 zones · Real-time feed</p>
           </div>
-          <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-full">
-            <div class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-            <span class="text-[10px] font-bold text-white/80 uppercase tracking-wider">Live</span>
+          <div class="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+            <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ring-2 ring-emerald-400/20"></div>
+            <span class="text-[10px] font-black text-emerald-400 uppercase tracking-[0.15em]">Live</span>
           </div>
         </div>
-        <div class="grid grid-cols-3 gap-2">
+        <div class="grid grid-cols-3 gap-2.5">
           ${Object.entries({
             'Zone 1': {city: 'Chennai C.', risk: 'low'},
             'Zone 2': {city: 'Hyderabad', risk: 'low'},
@@ -249,20 +256,19 @@ export function homeScreen(state) {
             'Zone 6': {city: 'Bengaluru', risk: 'low'},
           }).map(([z, info]) => {
             const isActive = z === zone;
-            const bgClass = isActive ? 'bg-emerald-500/20 border-emerald-400/30' : info.risk === 'med' ? 'bg-amber-500/10 border-amber-400/20' : 'bg-white/5 border-white/10';
-            const dotClass = isActive ? 'bg-emerald-400' : info.risk === 'med' ? 'bg-amber-400' : 'bg-white/30';
+            const bgClass = isActive ? 'bg-emerald-500/15 border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.1)]' : info.risk === 'med' ? 'bg-amber-500/15 border-amber-500/30' : 'bg-white/5 border-white/10';
+            const dotClass = isActive ? 'bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.8)]' : info.risk === 'med' ? 'bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.8)]' : 'bg-white/20';
             const pulseClass = isActive ? 'animate-pulse' : '';
-            return '<div class="rounded-2xl p-3 border ' + bgClass + ' text-center">'
-              + '<div class="w-2 h-2 rounded-full ' + dotClass + ' mx-auto mb-1.5 ' + pulseClass + '"></div>'
-              + '<p class="text-[10px] font-bold text-white/90">' + z.replace('Zone ', 'Z') + '</p>'
-              + '<p class="text-[8px] text-white/50 font-bold">' + info.city + '</p>'
+            return '<div class="aspect-square rounded-full border ' + bgClass + ' text-center flex flex-col items-center justify-center transition-all duration-500 shadow-lg">'
+              + '<div class="w-1.5 h-1.5 rounded-full ' + dotClass + ' mb-1 ' + pulseClass + '"></div>'
+              + '<p class="text-[12px] font-black tracking-widest text-white">' + z.replace('Zone ', 'Z') + '</p>'
+              + '<p class="text-[7px] text-white/50 font-bold uppercase tracking-tighter">' + info.city + '</p>'
               + '</div>';
           }).join('')}
         </div>
-        <div class="mt-3 flex items-center gap-4 justify-center text-[9px] text-white/40 font-bold uppercase tracking-wider">
-          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>Your Zone</span>
-          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span>Elevated</span>
-          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-white/30"></span>Normal</span>
+        <div class="mt-5 flex items-center gap-5 justify-center text-[9px] text-white/40 font-bold uppercase tracking-widest">
+          <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>Yours</span>
+          <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.8)]"></span>Elevated</span>
         </div>
       </div>
     </section>
@@ -310,8 +316,8 @@ export function coverageScreen(state) {
     <!-- Payout formula info — §3.1 -->
     <div class="bg-primary/5 rounded-2xl p-4 border border-primary/10">
       <p class="text-[10px] font-black text-primary uppercase tracking-widest mb-2">Core payout formula (§3.1)</p>
-      <p class="font-headline font-bold text-on-surface">Payout = EPH × Disruption Hours</p>
-      <p class="text-xs text-on-surface-variant mt-1">EPH: ₹102/hr · Capped at declared weekly income</p>
+      <p class="font-headline font-bold text-on-surface">Payout = ₹102 × Disruption Hours</p>
+      <p class="text-xs text-on-surface-variant mt-1">Rate: ₹102/hr (Zomato CEO Disclosure, Jan 2026)</p>
     </div>
 
     <div class="flex items-center justify-between mb-4 px-1">
@@ -340,7 +346,7 @@ export function liveZoneScreen(state) {
   const risk = Number(data.rain_mm || 0) > 10 || Number(data.aqi || 0) > 200;
 
   return `
-<div class="min-h-full bg-surface flex flex-col pb-32 overflow-x-hidden">
+<div class="min-h-full bg-surface flex flex-col pb-32">
   <header class="top-shell px-6 py-4 flex items-center justify-between">
     <div class="flex items-center gap-2">
       <button onclick="actions.goToDashboard()" aria-label="Back to dashboard" class="material-symbols-outlined text-primary rounded-full p-1.5">arrow_back</button>
@@ -639,19 +645,19 @@ export function accountScreen(state) {
   const tierColor = state.tier === 'premium' ? 'text-secondary' : 'text-primary';
   const scoreLabel = score >= 90 ? t('excellent') || 'Excellent' : score >= 80 ? t('strong') || 'Strong' : score >= 70 ? t('good') || 'Good' : t('building') || 'Building';
   const platformLabel = state.platform === 'both' ? 'Swiggy + Zomato' : state.platform === 'zomato' ? 'Zomato' : 'Swiggy';
-  const currentPremium = Number(state.premiumAmount || (state.tier === 'premium' ? 190 : 65));
+  const currentPremium = Number(state.premiumAmount || (state.tier === 'premium' ? 70 : 35));
   // Loyalty discount: 3% per continuous quarter (Policy §4.2)
   const quartersEnrolled = Math.floor((Number(state.user?.tenure_months || 0) || 0) / 3);
   const loyaltyDiscount = Math.min(15, quartersEnrolled * 3); // 3% per quarter, max 15%
-  const projectedPremium = Math.max(49, Math.round(currentPremium * (1 - loyaltyDiscount / 100)));
+  const projectedPremium = Math.max(20, Math.round(currentPremium * (1 - loyaltyDiscount / 100)));
   const progressPct = Math.max(35, Math.min(92, score));
   return `
 <div class="min-h-full bg-[#f8faf9] flex flex-col pb-32">
   <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-outline-variant/5">
     <div class="px-6 py-4 w-full flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-primary-container/20 flex items-center justify-center overflow-hidden">
-          <img alt="Delivery Partner Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuARIoPuacA6g_vTxGE5JTqlFuF120n_Ytl_Z-uNMhcnWDv687d_xBcSYnJBey7fZtjAsM4LUrk6hmOfWW-PQ4-TsX-H9NXfhO1x4u4FdPNuV2IQVmFzxKn19ITXB8vromjQYoh3WuqP91hU5JH1KxOFCV-nykiy6d2voNJG5Ccl5BJ7gVbzzgJR_yQ4TqtWgolxabOHnb6UqfFHWC5pZb8My15rDD32L3J9O3L4UJc6fFdfKEMoR8-1fi8acT3lclkJ1Udo0LIf4mjE"/>
+        <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white font-black text-lg shadow-sm border border-white/20">
+          ${user.name?.charAt(0).toUpperCase() || 'P'}
         </div>
         <h1 class="font-headline font-black text-xl text-primary tracking-tighter">${t('app_name')}</h1>
       </div>
@@ -664,7 +670,7 @@ export function accountScreen(state) {
       <div class="relative mb-4">
         <div class="w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-primary to-secondary shadow-lg">
           <div class="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
-             <span class="material-symbols-outlined text-primary text-5xl" style="font-variation-settings:'FILL' 1;">account_circle</span>
+             <span class="text-4xl font-headline font-black text-primary">${user.name?.charAt(0).toUpperCase() || 'P'}</span>
           </div>
         </div>
         <div class="absolute -right-1 -bottom-1 w-8 h-8 bg-tertiary-fixed-dim rounded-full border-4 border-white flex items-center justify-center shadow-sm">
@@ -713,10 +719,59 @@ export function accountScreen(state) {
           <p class="text-xs font-black">88%</p>
         </div>
         <div class="text-center">
-          <span class="material-symbols-outlined text-primary mb-1">verified_user</span>
-          <p class="text-[9px] font-black text-outline uppercase mb-0.5">${t('kyc') || 'KYC'}</p>
-          <p class="text-xs font-black text-tertiary">${t('active')}</p>
+          <span class="material-symbols-outlined text-primary mb-1">badge</span>
+          <p class="text-[9px] font-black text-outline uppercase mb-0.5">Partner ID</p>
+          <p class="text-xs font-black text-tertiary">Verified</p>
         </div>
+      </div>
+    </section>
+    
+    <!-- Simulation Mode (Phase 3 Developer Tooling) -->
+    <section class="bg-surface-container-low p-6 rounded-[32px] border border-dashed border-primary/30">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary">science</span>
+          <h3 class="font-headline font-bold text-on-surface">Developer Simulation</h3>
+        </div>
+        <div class="active:scale-95 transition-transform"><span class="bg-primary/10 text-primary text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest">Active</span></div>
+      </div>
+      
+      <div class="grid grid-cols-1 gap-3">
+        <button onclick="actions.simulateSuccessPayment()" class="w-full bg-white border border-outline-variant/10 p-4 rounded-2xl flex items-center gap-3 active:bg-surface transition-colors shadow-sm">
+          <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center"><span class="material-symbols-outlined text-green-600">credit_card</span></div>
+          <div class="text-left">
+            <p class="font-bold text-sm text-on-surface">Simulate Razorpay</p>
+            <p class="text-[10px] text-outline font-medium uppercase">Mock Success · Policy Update</p>
+          </div>
+        </button>
+        
+        <button onclick="actions.simulateTrigger()" class="w-full bg-white border border-outline-variant/10 p-4 rounded-2xl flex items-center gap-3 active:bg-surface transition-colors shadow-sm">
+          <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center"><span class="material-symbols-outlined text-amber-600">bolt</span></div>
+          <div class="text-left">
+            <p class="font-bold text-sm text-on-surface">Simulated Payout</p>
+            <p class="text-[10px] text-outline font-medium uppercase">Trigger Celebration · Instant Transfer</p>
+          </div>
+        </button>
+      </div>
+      <p class="mt-4 text-[10px] text-center text-outline font-medium">Verification logic is preserved during simulation.</p>
+    </section>
+    
+    <!-- Language Selection Section -->
+    <section class="bg-surface-container-low p-6 rounded-[32px] border border-outline-variant/10 shadow-sm overflow-hidden mt-6">
+      <div class="flex items-center gap-4 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary"><span class="material-symbols-outlined">translate</span></div>
+        <div>
+          <p class="font-bold text-sm text-on-surface">${t('select_language')}</p>
+          <p class="text-[10px] uppercase font-black text-outline tracking-wider">${t('language')}</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-2">
+        ${supportedLanguages.map(l => `
+          <button onclick="actions.changeLanguage('${l.code}')" class="flex flex-col items-center justify-center py-4 rounded-2xl border-2 transition-all ${state.language === l.code ? 'border-primary bg-primary/10' : 'border-outline-variant/10 bg-white'}">
+            <span class="text-sm font-black mb-1 ${state.language === l.code ? 'text-primary' : 'text-on-surface'}">${l.name}</span>
+            <span class="text-[9px] font-bold text-outline opacity-60 uppercase tracking-widest">${l.code}</span>
+          </button>
+        `).join('')}
       </div>
     </section>
 
@@ -779,7 +834,7 @@ export function accountScreen(state) {
           <div class="grid grid-cols-2 gap-3 mb-4">
             <div class="rounded-2xl border-2 ${state.tier === 'premium' ? 'border-outline-variant/10' : 'border-primary'} p-4 text-center">
               <p class="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Basic</p>
-              <p class="font-headline font-bold text-lg">₹49 – ₹75<span class="text-xs text-outline font-normal">/wk</span></p>
+              <p class="font-headline font-bold text-lg">₹20 – ₹35<span class="text-xs text-outline font-normal">/wk</span></p>
               <div class="text-left mt-3 space-y-1.5 text-xs">
                 <p class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-sm">check_circle</span> Heavy Rain</p>
                 <p class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-sm">check_circle</span> Dense Fog</p>
@@ -794,7 +849,7 @@ export function accountScreen(state) {
             <div class="rounded-2xl border-2 ${state.tier === 'premium' ? 'border-secondary' : 'border-outline-variant/10'} p-4 text-center relative overflow-hidden">
               <div class="absolute top-0 right-0 bg-secondary text-white text-[7px] font-black uppercase px-2 py-0.5 rounded-bl-lg tracking-wider">Full</div>
               <p class="text-[10px] font-black uppercase tracking-widest text-secondary mb-1">Premium</p>
-              <p class="font-headline font-bold text-lg">₹105 – ₹260<span class="text-xs text-outline font-normal">/wk</span></p>
+              <p class="font-headline font-bold text-lg">₹40 – ₹70<span class="text-xs text-outline font-normal">/wk</span></p>
               <div class="text-left mt-3 space-y-1.5 text-xs">
                 <p class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-sm">check_circle</span> Heavy Rain</p>
                 <p class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-sm">check_circle</span> Dense Fog</p>
@@ -816,8 +871,8 @@ export function accountScreen(state) {
         <div class="bg-surface-container-low rounded-2xl p-5 mb-4">
           <h4 class="font-headline font-bold text-sm mb-3 text-on-surface">Payout Formula (§3)</h4>
           <div class="bg-primary/5 rounded-xl p-4 mb-3 text-center">
-            <p class="font-mono font-bold text-primary text-lg">Payout = EPH × Disruption Hours</p>
-            <p class="text-xs text-outline mt-1">EPH = ₹102/hr (Zomato CEO disclosure, Jan 2026)</p>
+            <p class="font-mono font-bold text-primary text-lg">Payout = ₹102 × Disruption Hours</p>
+            <p class="text-xs text-outline mt-1">Rate based on Zomato CEO disclosure, Jan 2026</p>
           </div>
           <div class="space-y-2 text-xs">
             <div class="flex justify-between py-1.5 border-b border-outline-variant/10"><span class="text-outline">Heavy Rain (≥64.5mm)</span><span class="font-bold">₹408 (4 hrs)</span></div>
@@ -837,14 +892,14 @@ export function accountScreen(state) {
         <div class="bg-surface-container-low rounded-2xl p-5 mb-4">
           <h4 class="font-headline font-bold text-sm mb-3 text-on-surface">Premium Calculation (§4)</h4>
           <div class="bg-secondary/5 rounded-xl p-4 mb-3 text-center">
-            <p class="font-mono font-bold text-secondary text-sm">₹50 × zone × weather × history</p>
+            <p class="font-mono font-bold text-secondary text-sm">prob × loss × 7 × load factor</p>
           </div>
           <div class="space-y-2 text-xs">
-            <div class="flex justify-between py-1.5 border-b border-outline-variant/10"><span class="text-outline">Base Rate</span><span class="font-bold">₹50 fixed</span></div>
-            <div class="flex justify-between py-1.5 border-b border-outline-variant/10"><span class="text-outline">Zone Multiplier</span><span class="font-bold">0.70× – 2.80×</span></div>
-            <div class="flex justify-between py-1.5 border-b border-outline-variant/10"><span class="text-outline">Weather Multiplier</span><span class="font-bold">0.90× – 1.60×</span></div>
-            <div class="flex justify-between py-1.5 border-b border-outline-variant/10"><span class="text-outline">History Multiplier</span><span class="font-bold">0.85× – 1.25×</span></div>
-            <div class="flex justify-between py-1.5"><span class="text-outline">Target Loss Ratio</span><span class="font-bold text-primary">65%</span></div>
+            <div class="flex justify-between py-1.5 border-b border-outline-variant/10"><span class="text-outline">Historical Probe</span><span class="font-bold">10-years</span></div>
+            <div class="flex justify-between py-1.5 border-b border-outline-variant/10"><span class="text-outline">Ward Factor</span><span class="font-bold">Actual Probability</span></div>
+            <div class="flex justify-between py-1.5 border-b border-outline-variant/10"><span class="text-outline">Severity</span><span class="font-bold">Avg Hours Lost</span></div>
+            <div class="flex justify-between py-1.5 border-b border-outline-variant/10"><span class="text-outline">Load Factor</span><span class="font-bold">1.54</span></div>
+            <div class="flex justify-between py-1.5"><span class="text-outline">Target BCR</span><span class="font-bold text-primary">65%</span></div>
           </div>
         </div>
 
@@ -854,7 +909,7 @@ export function accountScreen(state) {
           <div class="space-y-2 text-xs">
             <div class="flex items-center justify-between py-1.5 border-b border-outline-variant/10"><span class="text-outline">Score < 0.30</span><span class="font-bold text-primary">AUTO-PAY ⚡</span></div>
             <div class="flex items-center justify-between py-1.5 border-b border-outline-variant/10"><span class="text-outline">0.30–0.65 + Network Weak</span><span class="font-bold text-tertiary">GRACE-PAY</span></div>
-            <div class="flex items-center justify-between py-1.5 border-b border-outline-variant/10"><span class="text-outline">0.30–0.65 + Zone Mismatch</span><span class="font-bold text-secondary">SOFT-HOLD</span></div>
+            <div class="flex items-center justify-between py-1.5 border-b border-outline-variant/10"><span class="text-outline">0.30–0.65 + Ward Mismatch</span><span class="font-bold text-secondary">SOFT-HOLD</span></div>
             <div class="flex items-center justify-between py-1.5"><span class="text-outline">Score > 0.65</span><span class="font-bold text-error">HARD-HOLD</span></div>
           </div>
         </div>
@@ -941,9 +996,9 @@ export function accountScreen(state) {
           <h4 class="font-headline font-bold text-sm mb-3 text-on-surface flex items-center gap-2"><span class="material-symbols-outlined text-primary text-base">badge</span> Eligibility (§8.1)</h4>
           <ul class="space-y-2 text-xs text-on-surface-variant">
             <li class="flex items-start gap-2"><span class="text-primary mt-0.5 text-sm">•</span> Must be an active delivery partner on Swiggy, Zomato, or both platforms.</li>
-            <li class="flex items-start gap-2"><span class="text-primary mt-0.5 text-sm">•</span> Must be aged 18 years or above.</li>
+            <li class="flex items-start gap-2"><span class="text-primary mt-0.5 text-sm">•</span> Minimum 7 active delivery days required before cover starts.</li>
+            <li class="flex items-start gap-2"><span class="text-primary mt-0.5 text-sm">•</span> Workers with <5 active days in last 30 days are limited to Basic plan.</li>
             <li class="flex items-start gap-2"><span class="text-primary mt-0.5 text-sm">•</span> Only available within India. Payout to Indian UPI accounts only.</li>
-            <li class="flex items-start gap-2"><span class="text-primary mt-0.5 text-sm">•</span> One active policy per worker at any time. Upgrading from Basic to Premium is permitted.</li>
             <li class="flex items-start gap-2"><span class="text-primary mt-0.5 text-sm">•</span> Must declare honest average weekly income at onboarding.</li>
           </ul>
         </div>
@@ -973,8 +1028,9 @@ export function accountScreen(state) {
         <div class="bg-surface-container-low rounded-2xl p-5">
           <h4 class="font-headline font-bold text-sm mb-3 text-on-surface flex items-center gap-2"><span class="material-symbols-outlined text-primary text-base">payments</span> Payout Conditions (§8.4)</h4>
           <ul class="space-y-2 text-xs text-on-surface-variant">
-            <li class="flex items-start gap-2"><span class="text-primary mt-0.5 text-sm">•</span> Payout fires when and only when the Trigger Monitor detects a parametric threshold crossed, confirmed by dual data sources.</li>
-            <li class="flex items-start gap-2"><span class="text-primary mt-0.5 text-sm">•</span> Amount is fixed by formula: EPH × Disruption Hours. Cannot be negotiated.</li>
+            <li class="flex items-start gap-2"><span class="text-primary mt-0.5 text-sm">•</span> Payout fires when the Trigger Monitor detects a threshold crossed (confirmed by dual data sources with 10-year baselines).</li>
+            <li class="flex items-start gap-2"><span class="text-primary mt-0.5 text-sm">•</span> Trigger must match worker's city AND declared active hours. Off-shift triggers are not covered.</li>
+            <li class="flex items-start gap-2"><span class="text-primary mt-0.5 text-sm">•</span> Amount is fixed by formula: ₹102/hr × Expected Disruption Hours. Cannot be negotiated.</li>
             <li class="flex items-start gap-2"><span class="text-primary mt-0.5 text-sm">•</span> If UPI payout fails: 2 retries within 24 hours, then 7-day hold. After 7 days, unclaimed payout is forfeited.</li>
           </ul>
         </div>
@@ -989,13 +1045,13 @@ export function accountScreen(state) {
           </ul>
         </div>
 
-        <!-- §8.6 Zone Lock -->
+        <!-- §8.6 Ward Lock -->
         <div class="bg-surface-container-low rounded-2xl p-5">
-          <h4 class="font-headline font-bold text-sm mb-3 text-on-surface flex items-center gap-2"><span class="material-symbols-outlined text-primary text-base">lock</span> Zone Lock (§8.6)</h4>
+          <h4 class="font-headline font-bold text-sm mb-3 text-on-surface flex items-center gap-2"><span class="material-symbols-outlined text-primary text-base">lock</span> Ward Lock (§8.6)</h4>
           <ul class="space-y-2 text-xs text-on-surface-variant">
-            <li class="flex items-start gap-2"><span class="text-primary mt-0.5 text-sm">•</span> Primary zone locked for 30 days after onboarding.</li>
-            <li class="flex items-start gap-2"><span class="text-primary mt-0.5 text-sm">•</span> Zone changes: once per 30-day period, 7-day waiting period for new zone coverage.</li>
-            <li class="flex items-start gap-2"><span class="text-primary mt-0.5 text-sm">•</span> GPS + cell tower mismatch may trigger premium adjustment.</li>
+            <li class="flex items-start gap-2"><span class="text-primary mt-0.5 text-sm">•</span> Primary ward locked for 30 days after onboarding.</li>
+            <li class="flex items-start gap-2"><span class="text-primary mt-0.5 text-sm">•</span> Ward changes: once per 30-day period, 7-day waiting period for new ward coverage.</li>
+            <li class="flex items-start gap-2"><span class="text-error mt-0.5 text-sm">!</span> If ward BCR > 85%, new enrolments in that ward are temporarily suspended.</li>
           </ul>
         </div>
 
@@ -1023,7 +1079,7 @@ export function accountScreen(state) {
         <div class="bg-surface-container-low rounded-2xl p-5">
           <h4 class="font-headline font-bold text-sm mb-3 text-on-surface flex items-center gap-2"><span class="material-symbols-outlined text-primary text-base">security</span> Data Privacy (§8.9)</h4>
           <ul class="space-y-2 text-xs text-on-surface-variant">
-            <li class="flex items-start gap-2"><span class="text-primary mt-0.5 text-sm">•</span> We collect: mobile number, city, zone, income, Partner ID, UPI ID, anonymised cell tower IDs, GPS pings.</li>
+            <li class="flex items-start gap-2"><span class="text-primary mt-0.5 text-sm">•</span> We collect: mobile number, city, ward, income, Partner ID, UPI ID, anonymised cell tower IDs, GPS pings.</li>
             <li class="flex items-start gap-2"><span class="text-primary mt-0.5 text-sm">•</span> Cell tower IDs: anonymised, used exclusively for fraud detection. Never shared.</li>
             <li class="flex items-start gap-2"><span class="text-primary mt-0.5 text-sm">•</span> Data is never shared with Swiggy, Zomato, or delivery platforms.</li>
             <li class="flex items-start gap-2"><span class="text-primary mt-0.5 text-sm">•</span> Account deletion available anytime. Active policy terminated without refund.</li>
@@ -1060,18 +1116,7 @@ export function accountScreen(state) {
         </label>
       </div>
 
-        <div class="flex items-center gap-4">
-          <div class="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-outline"><span class="material-symbols-outlined">language</span></div>
-          <p class="font-bold text-sm">${t('language')}</p>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          ${supportedLanguages.map(l => `
-            <button onclick="actions.changeLanguage('${l.code}')" class="py-3 px-4 rounded-2xl border-2 ${state.language === l.code ? 'border-primary bg-primary/5 text-primary font-black' : 'border-outline-variant/10 bg-transparent text-outline font-bold'} text-xs transition-colors">
-              ${l.name} (${l.code.toUpperCase()})
-            </button>
-          `).join('')}
-        </div>
-      </div>
+
 
       <div class="p-4">
         <button onclick="actions.logout()" class="w-full flex items-center justify-between p-2 group text-outline hover:text-error transition-colors">

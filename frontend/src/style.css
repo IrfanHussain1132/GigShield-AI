@@ -105,7 +105,8 @@ body {
 
 .app-container {
     width: min(100vw, 430px);
-    min-height: 100vh;
+    height: 100vh;
+    height: 100dvh; /* Mobile viewport height */
     margin: 0 auto;
     background: var(--color-background);
     position: relative;
@@ -113,6 +114,18 @@ body {
     flex-direction: column;
     box-shadow: 0 0 100px rgba(0,0,0,0.1);
     overflow: hidden;
+}
+
+#screen-container {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    /* Smooth scrolling on iOS */
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Fluid Screen Transitions */
@@ -205,55 +218,85 @@ body {
 }
 
 /* --- Optimization: Improved Touch Targets & Premium Feel --- */
-.nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 12px 0;
-    min-width: 64px;
-    min-height: 64px;
-    color: var(--color-on-surface-variant);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    opacity: 0.75;
-}
-
-.nav-item span:last-child {
-    font-size: 11px;
-    font-weight: 700;
-    margin-top: 2px;
-    letter-spacing: -0.2px;
-}
-
-.nav-item.active {
-    color: var(--color-primary);
-    opacity: 1;
-    transform: translateY(-2px);
-}
-
-.nav-item.active .material-symbols-outlined {
-    font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
-}
-
+/* --- Premium Bottom Navigation Optimization --- */
 .nav-bottom {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    height: calc(82px + env(safe-area-inset-bottom));
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(25px) saturate(180%);
-    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    height: calc(72px + env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
     display: flex;
     justify-content: space-around;
-    align-items: flex-start;
-    padding-top: 10px;
+    align-items: center;
     padding-bottom: env(safe-area-inset-bottom);
-    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    border-top: 1px solid rgba(0, 0, 0, 0.04);
     z-index: 1000;
-    box-shadow: 0 -10px 40px rgba(0,0,0,0.05);
+    box-shadow: 0 -8px 30px rgba(0,0,0,0.03);
+    border-radius: 24px 24px 0 0; /* Add rounded top corners for a modern feel */
+}
+
+.nav-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 0;
+    flex: 1;
+    color: var(--color-on-surface-variant);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    opacity: 0.6;
+}
+
+.nav-item.active {
+    color: var(--color-primary);
+    opacity: 1;
+    transform: translateY(-4px);
+}
+
+.nav-item::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    width: 0;
+    height: 3px;
+    background: var(--color-primary);
+    border-radius: 10px;
+    transform: translateX(-50%);
+    transition: width 0.3s ease;
+}
+
+.nav-item.active::after {
+    width: 14px;
+}
+
+.nav-item .material-symbols-outlined {
+    font-size: 26px;
+    margin-bottom: 2px;
+    transition: all 0.3s ease;
+}
+
+.nav-item.active .material-symbols-outlined {
+    font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+    filter: drop-shadow(0 2px 8px rgba(0, 94, 82, 0.2));
+}
+
+.nav-item span:last-child {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.8;
+}
+
+.nav-item.active span:last-child {
+    opacity: 1;
 }
 
 /* Premium Glass for Cards */
@@ -314,7 +357,31 @@ body {
 .score-ring {
     width: 90px;
     height: 90px;
-    filter: drop-shadow(0 4px 10px rgba(0, 94, 82, 0.1));
+    border-radius: 50%;
+    background: conic-gradient(var(--color-primary) var(--ring-fill, 0deg), var(--color-outline-variant) 0deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0, 94, 82, 0.15);
+}
+
+.score-ring::before {
+    content: '';
+    position: absolute;
+    inset: 8px; /* Thickness of the ring */
+    background: #fff;
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.score-ring-value {
+    position: relative;
+    z-index: 2;
+    font-family: var(--font-headline);
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--color-primary);
 }
 
 .payout-celebration {

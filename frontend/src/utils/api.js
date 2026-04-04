@@ -4,7 +4,7 @@ const _apiCache = {};
 /**
  * Optimized API Helper with Neural Cache
  */
-export async function api(path, options = {}, state = {}) {
+export async function api(path, options = {}, state = {}, retries = 0) {
   const isGet = !options.method || options.method === 'GET';
   const cacheKey = `${path}_${JSON.stringify(options.params || {})}`;
   

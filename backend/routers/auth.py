@@ -231,9 +231,16 @@ def me(current_user: dict = Depends(require_current_user), db: Session = Depends
     if worker is None and phone:
         worker = db.query(models.Worker).filter(models.Worker.phone == phone).first()
 
+    if worker is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authenticated worker not found in system (database was likely reset)."
+        )
+
     return {
         "phone": phone,
-        "worker_id": worker.id if worker else worker_id,
-        "partner_id": worker.partner_id if worker else None,
-        "is_verified": bool(worker and worker.is_verified),
+        "worker_id": worker.id,
+        "partner_id": worker.partner_id,
+        "is_verified": bool(worker.is_verified),
+        "name": worker.name
     }
