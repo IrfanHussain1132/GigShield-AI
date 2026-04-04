@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+      - contributions/bhima
   pull_request:
 
 jobs:
@@ -27,4 +28,4 @@ jobs:
 
       - name: Validate integrations status response shape
         run: |
-          pytest -q backend/tests/test_integrations_status_ci.py
+          PYTHONPATH="${{ github.workspace }}/backend" pytest -q backend/tests/test_integrations_status_ci.py
