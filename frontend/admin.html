@@ -464,8 +464,8 @@
 </div>
 
 <script>
-const API_BASE = window.location.port === '5173' 
-    ? 'http://localhost:8000/api/v1' 
+const API_BASE = window.location.port === '5173' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'https://securesync-ai-production.up.railway.app/api/v1' 
     : `${window.location.origin}/api/v1`;
 
 // Update time

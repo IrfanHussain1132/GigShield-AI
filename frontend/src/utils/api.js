@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api/v1';
+const API = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE || 'https://securesync-ai-production.up.railway.app';
+const API_BASE = `${API}/api/v1`.replace('/api/v1/api/v1', '/api/v1');
 const _apiCache = {};
 
 /**
