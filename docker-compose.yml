@@ -59,6 +59,8 @@ services:
       dockerfile: Dockerfile
     container_name: securesync-backend
     restart: unless-stopped
+    volumes:
+      - ./backend:/app
     depends_on:
       postgres:
         condition: service_healthy
@@ -74,7 +76,7 @@ services:
       JWT_EXPIRY_HOURS: ${JWT_EXPIRY_HOURS:-1}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
       ENABLE_DEBUG_OTP: ${ENABLE_DEBUG_OTP:-false}
-      ENABLE_PHASE2_MOCK_OTP: ${ENABLE_PHASE2_MOCK_OTP:-false}
+      ENABLE_PHASE2_MOCK_OTP: ${ENABLE_PHASE2_MOCK_OTP:-true}
       PHASE2_MOCK_OTP_CODE: ${PHASE2_MOCK_OTP_CODE:-000000}
       PREMIUM_SIGNAL_CACHE_TTL_MINUTES: ${PREMIUM_SIGNAL_CACHE_TTL_MINUTES:-30}
       ENABLE_POSTGIS_ZONE_RISK: ${ENABLE_POSTGIS_ZONE_RISK:-true}
@@ -99,6 +101,7 @@ services:
       OPENWEATHER_KEY: ${OPENWEATHER_KEY:-}
       IQAIR_KEY: ${IQAIR_KEY:-}
       TOMTOM_KEY: ${TOMTOM_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
     ports:
       - "${BACKEND_PORT:-8000}:8000"
 
@@ -108,6 +111,9 @@ services:
       dockerfile: Dockerfile
     container_name: securesync-frontend
     restart: unless-stopped
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     depends_on:
       - backend
     environment:

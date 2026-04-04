@@ -1,4 +1,4 @@
-# SecureSync AI — Phase 2 Configuration
+# SecureSync AI — Phase 3 Configuration
 import os
 
 
@@ -10,9 +10,16 @@ def _csv_env(name: str, default: str) -> list[str]:
 OPENWEATHER_KEY = os.getenv("OPENWEATHER_KEY", "")
 IQAIR_KEY = os.getenv("IQAIR_KEY", "")
 TOMTOM_KEY = os.getenv("TOMTOM_KEY", "")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 
 # ── JWT Auth ──
+ENV_PROD = os.getenv("ENV_PROD", "false").lower() == "true"
 JWT_SECRET = os.getenv("JWT_SECRET", "dev-only-change-me")
+
+if ENV_PROD and JWT_SECRET == "dev-only-change-me":
+    import logging
+    logging.getLogger(__name__).warning("CRITICAL: JWT_SECRET is still default in production!")
+
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXPIRY_HOURS = int(os.getenv("JWT_EXPIRY_HOURS", "1"))
 
@@ -81,14 +88,20 @@ TRIGGER_INTERVAL_MINUTES = 1        # 1 min for demo responsiveness
 DEMO_RANDOM_PULSE_ENABLED = True    # 5% random pulse when no real events
 CACHE_TTL_SECONDS = 300             # 5 min cache for weather data
 
-# ── Premium Formula Defaults ──
-BASE_RATE = 25          # ₹25/week minimum
-HOURLY_RATE = 102       # ₹102/hr average EPH
-MIN_PREMIUM = 25
-MAX_PREMIUM_BASIC = 800
-MAX_PREMIUM_PREMIUM = 1200
+# ── Premium Formula Defaults (per Policy Reference §4) ──
+BASE_RATE = 50          # ₹50/week fixed base (Policy §4.2)
+HOURLY_RATE = 102       # ₹102/hr EPH — Zomato CEO disclosure, Jan 2026
+MIN_PREMIUM_BASIC = 49  # Basic floor (Policy §2.1)
+MAX_PREMIUM_BASIC = 75  # Basic ceiling
+MIN_PREMIUM_PREMIUM = 105  # Premium floor
+MAX_PREMIUM_PREMIUM = 260  # Premium ceiling
+MIN_PREMIUM = 49        # Absolute floor
+MAX_PAYOUT_BASIC_WEEKLY = 816     # ₹816 per week (Policy §2.1)
+MAX_PAYOUT_PREMIUM_WEEKLY = 4080  # ₹4,080 per week (Policy §2.1)
+MAX_SINGLE_PAYOUT = 816           # ₹816 max single event (8hr full day)
+TARGET_LOSS_RATIO = 0.65          # 65% target (Policy §4.5)
 
-# ── Fraud Thresholds ──
+# ── Fraud Thresholds (per Policy Reference §6) ──
 FRAUD_AUTO_APPROVE = 0.30
 FRAUD_SOFT_FLAG = 0.65
 MAX_CLAIMS_PER_WEEK = 5

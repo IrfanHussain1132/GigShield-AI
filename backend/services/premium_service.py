@@ -1,5 +1,5 @@
-# SecureSync AI — Premium Calculation Engine (Phase 2)
-# Implements: base_rate × (1 + risk_multiplier) × loyalty_discount × tier_factor
+# SecureSync AI — Premium Calculation Engine (Phase 3)
+# Implements: base_rate × zone_multiplier × weather_multiplier × history_multiplier (Policy §4.1)
 # With SHAP-style explainability breakdown
 
 import httpx
@@ -122,8 +122,8 @@ def calculate_weather_risk(rain_forecast: list, max_temps: list) -> float:
     # Scale: 0mm → 0.0, 64.5mm+ → 1.0
     rain_risk = min(avg_rain / 64.5, 1.0)
 
-    # Heat risk: days above 38°C
-    heat_days = sum(1 for t in max_temps if t >= 38) / max(len(max_temps), 1)
+    # Heat risk: days above 40°C (IMD Heat Wave threshold per Policy §5)
+    heat_days = sum(1 for t in max_temps if t >= 40) / max(len(max_temps), 1)
 
     return rain_risk * 0.7 + heat_days * 0.3
 
@@ -235,7 +235,18 @@ async def calculate_premium(
     """
     Full premium calculation with SHAP-style breakdown.
 
-    Formula: base_rate × (1 + risk_multiplier) × loyalty_discount × tier_factor
+    Policy Reference §4.1:
+      weekly_premium = base_rate × zone_multiplier × weather_multiplier × history_multiplier
+
+    Component ranges (§4.2):
+      Base Rate:          ₹50 fixed
+      Zone Multiplier:    0.70× – 2.80×
+      Weather Multiplier: 0.90× – 1.60×
+      History Multiplier: 0.85× – 1.25×
+
+    Plan ranges (§2.1):
+      Basic:   ₹49 – ₹75/week
+      Premium: ₹105 – ₹260/week
     """
     # ── Fetch live data (cached per zone/coordinate for quote consistency) ──
     weather, aqi = await _get_cached_signals(zone, lat, lon)
@@ -252,45 +263,64 @@ async def calculate_premium(
     social_risk = calculate_social_risk(zone)
     platform_risk = calculate_platform_risk()
 
-    # Weighted risk multiplier (0.05–1.55 range)
-    risk_multiplier = (
-        weather_risk * 0.40
+    # ── Zone Multiplier (0.70 – 2.80) per §4.2 ──
+    # Combine zone_risk (0.0–1.0) with tier contribution
+    combined_zone_risk = (
+        zone_risk * 0.55
         + aqi_risk * 0.25
-        + zone_risk * 0.20
-        + social_risk * 0.10
-        + platform_risk * 0.05
+        + social_risk * 0.12
+        + platform_risk * 0.08
     )
-    risk_multiplier = max(0.05, min(risk_multiplier, 1.55))
+    zone_multiplier = 0.70 + (combined_zone_risk * 2.10)  # 0.70 – 2.80
+    zone_multiplier = max(0.70, min(zone_multiplier, 2.80))
 
-    # ── Loyalty discount (0.85–1.0) ──
+    # ── Weather Multiplier (0.90 – 1.60) per §4.2 ──
+    weather_multiplier = 0.90 + (weather_risk * 0.70)  # 0.90 – 1.60
+    weather_multiplier = max(0.90, min(weather_multiplier, 1.60))
+
+    # ── History Multiplier (0.85 – 1.25) per §4.2 ──
+    # 3% reduction per continuous quarter (§4.2), surcharge for above-avg claims
     quarters_enrolled = tenure_months // 3
     loyalty_discount = max(0.85, 1.0 - (quarters_enrolled * 0.03))
+    history_multiplier = loyalty_discount
+    if claim_history_count > 3:
+        # Surcharge for above-average claims
+        history_multiplier = min(history_multiplier + (claim_history_count - 3) * 0.05, 1.25)
+    history_multiplier = max(0.85, min(history_multiplier, 1.25))
 
-    # ── Tier factor ──
-    tier_factor = 1.0 if tier == "Basic" else 1.6
-    max_payout = config.MAX_PREMIUM_BASIC if tier == "Basic" else config.MAX_PREMIUM_PREMIUM
+    # ── Final premium per §4.1 ──
+    base_rate = config.BASE_RATE  # ₹50
+    raw_premium = base_rate * zone_multiplier * weather_multiplier * history_multiplier
 
-    # ── Final premium ──
-    base_rate = config.BASE_RATE
-    raw_premium = base_rate * (1 + risk_multiplier) * loyalty_discount * tier_factor
-    final_premium = round(max(config.MIN_PREMIUM, raw_premium), 0)
+    # Tier adjustment: Premium plan multiplier
+    tier_factor = 1.0 if tier == "Basic" else 2.0
+
+    raw_premium_tier = raw_premium * tier_factor
+
+    # Clamp to policy plan ranges (§2.1)
+    if tier == "Basic":
+        final_premium = round(max(config.MIN_PREMIUM_BASIC, min(raw_premium_tier, config.MAX_PREMIUM_BASIC)), 0)
+        max_weekly_payout = config.MAX_PAYOUT_BASIC_WEEKLY    # ₹816
+    else:
+        final_premium = round(max(config.MIN_PREMIUM_PREMIUM, min(raw_premium_tier, config.MAX_PREMIUM_PREMIUM)), 0)
+        max_weekly_payout = config.MAX_PAYOUT_PREMIUM_WEEKLY  # ₹4,080
 
     # ── SHAP-style breakdown ──
     adjustments = []
 
     # Rain adjustment
-    rain_adj = round(weather_risk * 0.40 * base_rate * tier_factor, 1)
-    if rain_adj > 0.5:
+    rain_contribution = (weather_multiplier - 0.90) * base_rate * zone_multiplier
+    if rain_contribution > 0.5:
         adjustments.append({
-            "label": "Rain Risk (Mon-Wed)",
-            "value": round(rain_adj, 1),
+            "label": "Rain Risk (7-day forecast)",
+            "value": round(rain_contribution * 0.7, 1),
             "icon": "rainy",
         })
 
     # Heat adjustment
-    heat_days = sum(1 for t in weather["max_temps"] if t >= 38)
+    heat_days = sum(1 for t in weather["max_temps"] if t >= 40)
     if heat_days > 0:
-        heat_adj = round(weather_risk * 0.30 * base_rate * 0.40 * tier_factor, 1)
+        heat_adj = round(rain_contribution * 0.3, 1)
         adjustments.append({
             "label": "Heat Warning Peak",
             "value": round(heat_adj, 1),
@@ -298,8 +328,8 @@ async def calculate_premium(
         })
 
     # AQI adjustment
-    if aqi > 100:
-        aqi_adj = round(aqi_risk * 0.25 * base_rate * tier_factor, 1)
+    if aqi > 200:
+        aqi_adj = round(aqi_risk * zone_multiplier * 5.0, 1)
         adjustments.append({
             "label": "Hazardous AQI Factor",
             "value": round(aqi_adj, 1),
@@ -307,22 +337,22 @@ async def calculate_premium(
         })
 
     # Zone risk adjustment
-    zone_adj = round(zone_risk * 0.20 * base_rate * tier_factor, 1)
-    if zone_adj > 1.0:
+    zone_adj = round((zone_multiplier - 1.0) * base_rate, 1)
+    if zone_multiplier > 1.5:
         adjustments.append({
-            "label": "Zone Risk Factor",
+            "label": f"High-Risk Zone ({zone})",
             "value": round(zone_adj, 1),
             "icon": "location_on",
         })
-    elif zone_adj < 2.0:
+    elif zone_multiplier < 1.0:
         adjustments.append({
-            "label": "Zone Risk Factor",
-            "value": -1.1,
+            "label": "Low-Risk Zone Discount",
+            "value": round(-abs(zone_adj), 1),
             "icon": "distance",
         })
 
     if zone_risk_source == "postgis_blended" and geo_hotspot_risk is not None:
-        geo_adj = round(geo_hotspot_risk * 0.08 * base_rate * tier_factor, 1)
+        geo_adj = round(geo_hotspot_risk * base_rate * 0.15, 1)
         if geo_adj > 0.3:
             adjustments.append({
                 "label": "Flood hotspot proximity",
@@ -332,18 +362,18 @@ async def calculate_premium(
 
     # Score reward
     if score >= 80:
-        score_discount = round((score - 70) * 0.15, 1)
+        score_discount = round((score - 70) * 0.12, 1)
         adjustments.append({
             "label": "Safety Score Reward",
             "value": round(-score_discount, 1),
             "icon": "verified_user",
         })
 
-    # Loyalty discount
-    if loyalty_discount < 1.0:
-        loyalty_savings = round((1.0 - loyalty_discount) * raw_premium, 1)
+    # Loyalty discount (3% per quarter — §4.2)
+    if history_multiplier < 1.0:
+        loyalty_savings = round((1.0 - history_multiplier) * raw_premium_tier, 1)
         adjustments.append({
-            "label": f"Loyalty discount ({quarters_enrolled} quarters)",
+            "label": f"Loyalty discount ({quarters_enrolled} quarters, 3%/qtr)",
             "value": round(-loyalty_savings, 1),
             "icon": "loyalty",
         })
@@ -368,13 +398,15 @@ async def calculate_premium(
 
     return {
         "base_premium": base_rate,
-        "risk_multiplier": round(risk_multiplier, 3),
-        "loyalty_discount": round(loyalty_discount, 2),
+        "zone_multiplier": round(zone_multiplier, 2),
+        "weather_multiplier": round(weather_multiplier, 2),
+        "history_multiplier": round(history_multiplier, 2),
         "tier_factor": tier_factor,
         "adjustments": adjustments,
         "final_premium": int(final_premium),
         "tier": tier,
-        "max_payout": int(max_payout),
+        "max_weekly_payout": int(max_weekly_payout),
+        "max_single_payout": config.MAX_SINGLE_PAYOUT,
         "explanation": explanation,
         "zone_risk_source": zone_risk_source,
         "geo_hotspot_risk": geo_hotspot_risk,
@@ -383,3 +415,4 @@ async def calculate_premium(
         "current_temp": weather["current_temp"],
         "rain_total_7d": round(sum(weather["rain_forecast"]), 1),
     }
+

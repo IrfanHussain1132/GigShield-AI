@@ -13,3 +13,4 @@ httpx
 kafka-python
 redis
 pytest
+numpy

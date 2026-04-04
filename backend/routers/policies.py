@@ -1,4 +1,4 @@
-# SecureSync AI — Policies Router (Phase 2)
+# SecureSync AI — Policies Router (Phase 3)
 from datetime import timedelta
 import hashlib
 import json
@@ -20,7 +20,7 @@ router = APIRouter(prefix="/api/v1/policies", tags=["policies"])
 class PolicyPurchaseRequest(BaseModel):
     worker_id: str = None       # partner_id string
     partner_id: str = None      # Accept both
-    premium_amount: float = Field(default=47, gt=0, le=5000)
+    premium_amount: float = Field(default=49, gt=0, le=5000)  # §2.1: Basic floor ₹49
     tier: str = Field(default="Basic", pattern="^(Basic|Premium)$")
     token: str = None
     idempotency_key: str = Field(default=None, min_length=12, max_length=128)
@@ -56,7 +56,7 @@ def _require_partner_access(db: Session, current_user: dict, partner_id: str):
 
 
 @router.post("/purchase")
-async def purchase_policy(
+def purchase_policy(
     request: PolicyPurchaseRequest,
     http_request: Request,
     db: Session = Depends(get_db),
@@ -158,7 +158,8 @@ async def purchase_policy(
         now = utcnow()
         end_date = now + timedelta(days=7)
 
-        max_payout = config.MAX_PREMIUM_BASIC if request.tier == "Basic" else config.MAX_PREMIUM_PREMIUM
+        # §2.1: Max weekly payout caps — Basic ₹816, Premium ₹4,080
+        max_payout = config.MAX_PAYOUT_BASIC_WEEKLY if request.tier == "Basic" else config.MAX_PAYOUT_PREMIUM_WEEKLY
 
         policy_ref = None
         for _ in range(5):
@@ -233,7 +234,7 @@ async def purchase_policy(
 
 
 @router.get("/active/{partner_id}")
-async def get_active_policy(
+def get_active_policy(
     partner_id: str,
     db: Session = Depends(get_db),
     current_user: dict = Depends(require_current_user),
@@ -278,7 +279,7 @@ async def get_active_policy(
 
 
 @router.get("/history/{partner_id}")
-async def get_policy_history(
+def get_policy_history(
     partner_id: str,
     db: Session = Depends(get_db),
     current_user: dict = Depends(require_current_user),
