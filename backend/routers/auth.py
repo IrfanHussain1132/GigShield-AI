@@ -123,7 +123,14 @@ def verify_otp(request: OTPVerifyRequest, http_request: Request, db: Session = D
         )
 
     if is_mock_attempt:
-        # Phase 2: High-Velocity Mock Bypass — allow any 6-digit input to proceed.
+        # Mock mode: only the configured PHASE2_MOCK_OTP_CODE is accepted.
+        # Any phone number works, but the code must match (use "123456" in dev/demo).
+        if code != mock_code:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid OTP",
+            )
+
         worker = db.query(models.Worker).filter(models.Worker.phone == phone).first()
         if not worker:
             worker = models.Worker(
