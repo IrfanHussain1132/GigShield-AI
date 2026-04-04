@@ -1,4 +1,4 @@
-# SecureSync AI — Workers Router (Phase 2)
+# SecureSync AI — Workers Router (Phase 3)
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db

@@ -16,7 +16,7 @@ def test_policy_purchase_idempotent_replay_returns_same_payload(client, db_sessi
     payload = {
         "partner_id": worker.partner_id,
         "premium_amount": 47,
-        "tier": "Standard",
+        "tier": "Basic",
     }
 
     first = client.post("/api/v1/policies/purchase", json=payload, headers=headers)
@@ -48,12 +48,12 @@ def test_idempotency_key_reuse_with_different_body_fails(client, make_worker, au
     ok_payload = {
         "partner_id": worker.partner_id,
         "premium_amount": 47,
-        "tier": "Standard",
+        "tier": "Basic",
     }
     mismatch_payload = {
         "partner_id": worker.partner_id,
         "premium_amount": 76,
-        "tier": "Plus",
+        "tier": "Premium",
     }
 
     first = client.post("/api/v1/policies/purchase", json=ok_payload, headers=headers)
@@ -134,7 +134,7 @@ def test_premium_quote_returns_zone_risk_metadata(client, make_worker, auth_head
         json={
             "partner_id": worker.partner_id,
             "zone": worker.zone,
-            "tier": "Standard",
+            "tier": "Basic",
         },
         headers=auth_headers(worker),
     )

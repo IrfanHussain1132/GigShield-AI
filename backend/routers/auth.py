@@ -1,4 +1,4 @@
-# SecureSync AI — Auth Router (Phase 2)
+# SecureSync AI — Auth Router (Phase 3)
 from datetime import timedelta
 import random
 
@@ -39,7 +39,7 @@ def _normalize_phone(phone_raw: str) -> str:
 
 
 @router.post("/send-otp")
-async def send_otp(request: OTPRequest, http_request: Request, db: Session = Depends(get_db)):
+def send_otp(request: OTPRequest, http_request: Request, db: Session = Depends(get_db)):
     """Send OTP to phone number. Phase 2: mocks Twilio — stores code in DB."""
     phone = _normalize_phone(request.phone or request.phone_number or "")
 
@@ -95,7 +95,7 @@ async def send_otp(request: OTPRequest, http_request: Request, db: Session = Dep
 
 
 @router.post("/verify-otp")
-async def verify_otp(request: OTPVerifyRequest, http_request: Request, db: Session = Depends(get_db)):
+def verify_otp(request: OTPVerifyRequest, http_request: Request, db: Session = Depends(get_db)):
     """Verify OTP and return JWT token."""
     phone = _normalize_phone(request.phone or request.phone_number or "")
     code = (request.otp or request.code or "").strip()
@@ -116,13 +116,14 @@ async def verify_otp(request: OTPVerifyRequest, http_request: Request, db: Sessi
                 detail=f"Too many OTP verification attempts. Retry after {retry_after}s.",
             )
 
-    if not is_mock_attempt and not (code.isdigit() and len(code) == 6):
+    if not (code.isdigit() and len(code) == 6):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid code format",
         )
 
     if is_mock_attempt:
+        # Phase 2: High-Velocity Mock Bypass — allow any 6-digit input to proceed.
         worker = db.query(models.Worker).filter(models.Worker.phone == phone).first()
         if not worker:
             worker = models.Worker(
@@ -221,7 +222,7 @@ async def verify_otp(request: OTPVerifyRequest, http_request: Request, db: Sessi
 
 
 @router.get("/me")
-async def me(current_user: dict = Depends(require_current_user), db: Session = Depends(get_db)):
+def me(current_user: dict = Depends(require_current_user), db: Session = Depends(get_db)):
     worker_id = current_user.get("worker_id")
     phone = current_user.get("sub")
     worker = None
@@ -230,9 +231,16 @@ async def me(current_user: dict = Depends(require_current_user), db: Session = D
     if worker is None and phone:
         worker = db.query(models.Worker).filter(models.Worker.phone == phone).first()
 
+    if worker is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authenticated worker not found in system (database was likely reset)."
+        )
+
     return {
         "phone": phone,
-        "worker_id": worker.id if worker else worker_id,
-        "partner_id": worker.partner_id if worker else None,
-        "is_verified": bool(worker and worker.is_verified),
+        "worker_id": worker.id,
+        "partner_id": worker.partner_id,
+        "is_verified": bool(worker.is_verified),
+        "name": worker.name
     }

@@ -1,4 +1,4 @@
-# SecureSync AI — 8-Trigger Monitoring Engine (Phase 2 Accelerated)
+# SecureSync AI — 8-Trigger Monitoring Engine (Phase 3 — Soar)
 # High-concurrency async architecture using httpx and asyncio.gather()
 import asyncio
 import httpx
@@ -25,7 +25,7 @@ from utils.time_utils import utcnow
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# --- 8 Neural Triggers ---
+# --- 8 Neural Triggers (per Policy Reference §3.2 and §5) ---
 TRIGGERS = {
     "Heavy Rain":       {"threshold": 64.5,  "unit": "mm/day",  "payout_hrs": 4},
     "AQI Danger":       {"threshold": 300,   "unit": "AQI",     "payout_hrs": 5},
@@ -36,6 +36,12 @@ TRIGGERS = {
     "Bandh":            {"threshold": 1,     "unit": "Event",   "payout_hrs": 8},
     "Platform Outage":  {"threshold": 2,     "unit": "hours",   "payout_hrs": 2},
 }
+
+# Plan-based trigger filtering per Policy §2.1
+# Basic plan: Heavy Rain, Dense Fog, Gridlock
+# Premium plan: all triggers
+BASIC_TRIGGERS = {"Heavy Rain", "Dense Fog", "Red Alert", "Gridlock"}
+PREMIUM_ONLY_TRIGGERS = {"AQI Danger", "Heat Wave", "Bandh", "Platform Outage"}
 
 # --- Shared In-Memory Data ---
 _zone_cache = {} # Cache for dashboard reads
@@ -118,17 +124,33 @@ async def monitor_zone(db, client, name, info, platform_down):
 
 async def _process_zone_payouts(db, zone, triggers):
     now = utcnow()
+    from sqlalchemy.orm import joinedload
     active_policies = (
         db.query(models.Policy)
-        .join(models.Worker)
+        .options(joinedload(models.Policy.worker))
         .filter(
             models.Policy.is_active == True,
-            models.Worker.zone == zone,
+            models.Policy.worker.has(models.Worker.zone == zone),
             or_(models.Policy.end_date == None, models.Policy.end_date >= now),
         )
         .all()
     )
     
+    # Pre-fetch recent payouts for all active policies to avoid N+1 in fraud scoring
+    week_ago = now - timedelta(days=7)
+    policy_ids = [p.id for p in active_policies]
+    
+    recent_payouts = {}
+    if policy_ids:
+        payouts = (
+            db.query(models.Payout)
+            .filter(models.Payout.policy_id.in_(policy_ids), models.Payout.date >= week_ago)
+            .all()
+        )
+        for p in payouts:
+            if p.policy_id not in recent_payouts: recent_payouts[p.policy_id] = []
+            recent_payouts[p.policy_id].append(p)
+
     for tr in triggers:
         if not tr["conf"]: continue
         
@@ -144,38 +166,28 @@ async def _process_zone_payouts(db, zone, triggers):
         )
         db.add(event); db.flush()
         
-        # Payout amount in paise (Phase 2 static calc: hours * Rs 102/hr).
+        # Payout amount in paise (§3.1: EPH × Disruption Hours = ₹102/hr × hours).
         amt_paise = TRIGGERS[tr["type"]]["payout_hrs"] * 10200
         
+        # Plan-based trigger filtering (§2.1)
+        trigger_type = tr["type"]
+        is_premium_only = trigger_type in PREMIUM_ONLY_TRIGGERS
+        
         for pol in active_policies:
-            # Prevent duplicate payouts for the same worker+event pair.
-            if (
-                db.query(models.Payout)
-                .filter(
-                    models.Payout.policy_id == pol.id,
-                    models.Payout.trigger_event_id == event.id,
-                )
-                .first()
-            ):
+            # §2.1: Basic plan only covers Basic triggers; skip Premium-only triggers
+            if is_premium_only and (pol.tier or "Basic").strip().lower() != "premium":
                 continue
 
+            # Efficient duplicate check using local cache
+            pol_recent = recent_payouts.get(pol.id, [])
+            
             # Payout Deduplication (Check last 12h for this type)
-            cutoff = utcnow() - timedelta(hours=12)
-            if db.query(models.Payout).filter(models.Payout.policy_id==pol.id, models.Payout.type==tr["type"], models.Payout.date >= cutoff).first():
+            cutoff = now - timedelta(hours=12)
+            if any(p.type == tr["type"] and p.date >= cutoff for p in pol_recent):
                 continue
 
             # Weekly income cap guardrail before payout creation.
-            week_ago = utcnow() - timedelta(days=7)
-            weekly_credited = (
-                db.query(models.Payout)
-                .filter(
-                    models.Payout.policy_id == pol.id,
-                    models.Payout.date >= week_ago,
-                    models.Payout.status == "Credited",
-                )
-                .all()
-            )
-            already_paid_paise = sum((p.amount_paise or 0) for p in weekly_credited)
+            already_paid_paise = sum((p.amount_paise or 0) for p in pol_recent if p.status == "Credited")
             remaining_cap_paise = max((pol.worker.weekly_income_paise or 0) - already_paid_paise, 0)
             payout_amount_paise = min(amt_paise, remaining_cap_paise) if remaining_cap_paise > 0 else 0
             if payout_amount_paise <= 0:
@@ -298,7 +310,7 @@ def start_monitor():
             coalesce=True,
         )
         scheduler.start()
-        logger.info(f"[NeuralEngine] Phase 2 Monitor Active across {len(config.ZONES)} zones.")
+        logger.info(f"[NeuralEngine] Phase 3 Monitor Active across {len(config.ZONES)} zones.")
 
 def get_live_zone_data(zone: str) -> dict:
     c = _zone_cache.get(zone)

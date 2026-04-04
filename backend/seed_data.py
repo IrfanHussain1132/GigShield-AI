@@ -1,4 +1,4 @@
-# SecureSync AI — Mock Partner Database for Phase 2
+# SecureSync AI — Mock Partner Database for Phase 3
 # Simulates Swiggy/Zomato Partner ID verification API
 
 MOCK_PARTNERS = {

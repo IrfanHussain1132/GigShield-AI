@@ -1,0 +1,123 @@
+# SecureSync AI — Kubernetes Deployment (Phase 3)
+# Auto-scaling configuration for monsoon claim spikes
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: securesync-backend
+  namespace: securesync
+  labels:
+    app: securesync
+    component: backend
+    phase: "3"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: securesync
+      component: backend
+  template:
+    metadata:
+      labels:
+        app: securesync
+        component: backend
+    spec:
+      containers:
+        - name: backend
+          image: gcr.io/securesync-ai/backend:latest
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: securesync-secrets
+                  key: database-url
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: securesync-secrets
+                  key: jwt-secret
+            - name: REDIS_URL
+              value: "redis://securesync-redis:6379/0"
+            - name: ENABLE_REDIS_CACHE
+              value: "true"
+            - name: ENABLE_REDIS_RATE_LIMIT
+              value: "true"
+            - name: AUTO_CREATE_SCHEMA
+              value: "false"
+            - name: CORS_ORIGINS
+              value: "https://securesync.ai,https://app.securesync.ai"
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: securesync-backend
+  namespace: securesync
+spec:
+  selector:
+    app: securesync
+    component: backend
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: securesync-backend-hpa
+  namespace: securesync
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: securesync-backend
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 10
+          periodSeconds: 120

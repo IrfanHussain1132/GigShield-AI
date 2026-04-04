@@ -1,4 +1,4 @@
-# SecureSync AI — Dashboard Router (Phase 2)
+# SecureSync AI — Dashboard Router (Phase 3)
 # Live data endpoints for Home, Coverage, Zone Status, Payouts screens
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -55,7 +55,7 @@ def _cache_set(key: str, payload, ttl_seconds: int | None = None) -> None:
 
 
 @router.get("/summary/{worker_id}")
-async def dashboard_summary(
+def dashboard_summary(
     worker_id: str,
     db: Session = Depends(get_db),
     current_user: dict = Depends(require_current_user),
@@ -89,27 +89,38 @@ async def dashboard_summary(
             .all()
         )
 
-    # Monthly payouts (across all policies)
-    all_policies = db.query(models.Policy).filter(models.Policy.worker_id == worker.id).all()
-    policy_ids = [p.id for p in all_policies]
-
-    month_payouts = []
+    # Get monthly and total stats in fewer queries
+    policy_ids = [p.id for p in db.query(models.Policy.id).filter(models.Policy.worker_id == worker.id).all()]
+    
+    month_total_paise = 0
+    month_payouts_count = 0
+    total_payouts_paise = 0
+    
     if policy_ids:
-        month_payouts = (
-            db.query(models.Payout)
+        month_stats = (
+            db.query(func.sum(models.Payout.amount_paise), func.count(models.Payout.id))
             .filter(
                 models.Payout.policy_id.in_(policy_ids),
                 models.Payout.date >= month_start,
-                models.Payout.status == "Credited",
+                models.Payout.status == "Credited"
             )
-            .all()
+            .first()
         )
-
-    month_total_paise = sum((p.amount_paise or 0) for p in month_payouts)
-    total_payouts_paise = sum((p.amount_paise or 0) for p in payouts) if payouts else 0
+        month_total_paise = month_stats[0] or 0
+        month_payouts_count = month_stats[1] or 0
+        
+        if policy:
+          total_payouts_paise = (
+              db.query(func.sum(models.Payout.amount_paise))
+              .filter(
+                  models.Payout.policy_id == policy.id,
+                  models.Payout.status.in_(["Credited", "Pending", "Processing", "Initiated"])
+              )
+              .scalar()
+          ) or 0
 
     # Policy streak: count consecutive active weeks
-    policy_streak = len([p for p in all_policies if p.status in ("active", "expired")])
+    policy_streak = db.query(models.Policy).filter(models.Policy.worker_id == worker.id).count()
 
     # Mock daily earnings estimate: hourly_rate × 8 hours + payouts
     daily_base_paise = (worker.hourly_rate_paise or 10200) * 8
@@ -123,7 +134,7 @@ async def dashboard_summary(
         "insurance_payout": int(total_payouts_paise / 100),
         "is_on_track": True,
         "month_total": int(month_total_paise / 100),
-        "payouts_count": len(month_payouts),
+        "payouts_count": month_payouts_count,
         "policy_streak": min(policy_streak, 12),
         "has_active_policy": policy is not None and policy.is_active,
         "hourly_rate": worker.hourly_rate,
@@ -133,7 +144,7 @@ async def dashboard_summary(
 
 
 @router.get("/payout-history/{worker_id}")
-async def payout_history(
+def payout_history(
     worker_id: str,
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
@@ -189,7 +200,7 @@ async def payout_history(
 
 
 @router.get("/payout-total/{worker_id}")
-async def payout_total(
+def payout_total(
     worker_id: str,
     db: Session = Depends(get_db),
     current_user: dict = Depends(require_current_user),
@@ -227,7 +238,7 @@ async def payout_total(
 
 
 @router.get("/zone-status/{zone_name}")
-async def zone_status(zone_name: str, db: Session = Depends(get_db)):
+def zone_status(zone_name: str, db: Session = Depends(get_db)):
     """
     Live zone status with real sensor data + trigger history.
     Used by the Live Zone Status screen.
@@ -302,7 +313,7 @@ async def zone_status(zone_name: str, db: Session = Depends(get_db)):
 
 
 @router.get("/live-weather/{zone_name}")
-async def live_weather(zone_name: str):
+def live_weather(zone_name: str):
     """
     Dedicated endpoint for the weather strip on home screen.
     Returns compact sensor readings. Cached for 5 minutes.
@@ -324,7 +335,7 @@ async def live_weather(zone_name: str):
 
 
 @router.get("/risk-forecast/{zone_name}")
-async def risk_forecast(zone_name: str):
+def risk_forecast(zone_name: str):
     """6-hour risk forecast for the home screen forecast strip."""
     cache_key = f"dashboard:risk_forecast:{zone_name.lower().replace(' ', '_')}"
     cached = _cache_get(cache_key)
@@ -337,7 +348,7 @@ async def risk_forecast(zone_name: str):
 
 
 @router.get("/latest-payout/{worker_id}")
-async def latest_payout(
+def latest_payout(
     worker_id: str,
     db: Session = Depends(get_db),
     current_user: dict = Depends(require_current_user),
@@ -381,7 +392,7 @@ async def latest_payout(
 
 
 @router.get("/payout-status-events/{worker_id}/{payout_id}")
-async def payout_status_events(
+def payout_status_events(
     worker_id: str,
     payout_id: int,
     db: Session = Depends(get_db),

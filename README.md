@@ -2,11 +2,11 @@
 
 **AI-Powered Parametric Income Insurance for Food Delivery Partners**
 
-> Built for **Guidewire DEVTrails 2026** · In partnership with EY & NIA · Phase 1 — Seed
+> Built for **Guidewire DEVTrails 2026** · In partnership with EY & NIA · **Phase 3 — Neural Scale**
 
-> *"We don't ask workers to prove their loss. The data proves it — and we pay instantly."*
+> *"Real-time parametric protection. Automated fraud detection. Instant payout."*
 
-**Demo Video:** [Watch here](#) &nbsp;|&nbsp; **Repository:** [GitHub](#)
+**Demo Video:** [Watch here](#) &nbsp;|&nbsp; **Repository:** [GitHub](https://github.com/IrfanHussain1132/SecureSync-AI)
 
 ---
 
@@ -234,15 +234,15 @@ The word "fraud" never appears in worker-facing messages for the first four cate
 | Layer | Technology | Purpose |
 |-------|------------|---------|
 | Frontend | Next.js 14, TypeScript | Mobile-first PWA |
-| Backend | Node.js, Express, TypeScript | API, Trigger Monitor, business logic |
-| ML Service | Python 3.9+, Flask, XGBoost, Scikit-learn | Premium + fraud scoring |
-| Database | PostgreSQL | Workers, policies, events, claims, payouts |
+| Backend | FastAPI (Python 3.9+), Uvicorn | High-performance Async API & Trigger Monitor |
+| ML Service | XGBoost, Scikit-learn, LSTM (Simple) | Premium quoting + Isolation Forest fraud scoring |
+| Database | PostgreSQL + SQLAlchemy | Persistent storage for workers, policies & events |
 | Payments | Razorpay (Sandbox) | UPI payout simulation |
-| Deployment | Docker, Docker Compose | `docker-compose up --build` |
-| Weather | OpenWeatherMap API | Rainfall, temperature, 7-day forecast |
-| Air Quality | AQICN API | Real-time AQI by zone |
-| Flood Alerts | IMD RSS Feed | Official Red/Orange alerts |
-| Civil Events | Mock Webhook | Simulated curfew/strike for demo |
+| Deployment | Docker, Docker Compose, K8s | Containerized orchestration |
+| Weather | OpenWeatherMap API | Rainfall, temperature & 7-day forecasts |
+| Air Quality | AQICN API | Real-time AQI tracking by zone |
+| Flood Alerts | IMD RSS Feed | Official Indian Meteorological Dept alerts |
+| Civil Events | Mock Webhook | Simulated local curfews/strikes |
 
 ---
 
@@ -256,22 +256,22 @@ The word "fraud" never appears in worker-facing messages for the first four cate
        │ polls/15min  │           │              │ bidirectional
        ▼              ▼           ▼              ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  BACKEND  —  Node.js · Express · TypeScript                 │
-│  REST API (port 4000)  +  Trigger Monitor (cron, 15 min)    │
+│  BACKEND  —  Python 3.9+ · FastAPI · Uvicorn                │
+│  REST API (port 8000)  +  Trigger Monitor (apscheduler)    │
 └──────────────┬──────────────────────┬───────────────────────┘
                │                      │
     ┌──────────▼────────┐  ┌──────────▼──────────────┐
-    │  FRONTEND          │  │  ML SERVICE              │
-    │  Next.js 14 PWA    │  │  Python · Flask          │
-    │  port 3000         │  │  XGBoost + IForest       │
+    │  FRONTEND          │  │  ML INTEGRATION          │
+    │  Vite-based PWA    │  │  Scikit-Learn/XGBoost    │
+    │  port 5173         │  │  Isolation Forest        │
     └────────────────────┘  └──────────────────────────┘
-                                        │
-                            ┌───────────▼────────────┐
-                            │  PostgreSQL             │
-                            │  workers · policies     │
-                            │  events · claims        │
-                            └────────────────────────┘
-
+                                         │
+                             ┌───────────▼────────────┐
+                             │  PostgreSQL / SQLite   │
+                             │  workers · policies     │
+                             │  events · claims        │
+                             └────────────────────────┘
+```
 
 ## 🚀 Future Enhancements
 
