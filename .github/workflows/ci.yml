@@ -2,7 +2,7 @@ name: SecureSync AI CI
 
 on:
   push:
-    branches: [ main, contributions/bhima, bhima-fix ]
+    branches: [ main, contributions/bhima ]
   pull_request:
     branches: [ main ]
 

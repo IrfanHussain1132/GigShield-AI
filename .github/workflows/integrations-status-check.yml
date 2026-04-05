@@ -6,7 +6,6 @@ on:
       - main
       - master
       - contributions/bhima
-      - bhima-fix
   pull_request:
 
 permissions:
