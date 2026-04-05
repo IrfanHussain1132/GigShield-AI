@@ -100,7 +100,6 @@ def verify_otp(request: OTPVerifyRequest, http_request: Request, db: Session = D
     phone = _normalize_phone(request.phone or request.phone_number or "")
     code = (request.otp or request.code or "").strip()
     mock_mode_enabled = config.ENABLE_PHASE2_MOCK_OTP
-    mock_code = str(config.PHASE2_MOCK_OTP_CODE).strip()
     is_mock_attempt = mock_mode_enabled
 
     if config.ENABLE_REDIS_RATE_LIMIT and not is_mock_attempt:
@@ -123,13 +122,7 @@ def verify_otp(request: OTPVerifyRequest, http_request: Request, db: Session = D
         )
 
     if is_mock_attempt:
-        # Mock mode: only the configured PHASE2_MOCK_OTP_CODE is accepted.
-        # Any phone number works, but the code must match (use "123456" in dev/demo).
-        if code != mock_code:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid OTP",
-            )
+        # Mock mode: accept any 6-digit numeric OTP for demo/dev login flow.
 
         worker = db.query(models.Worker).filter(models.Worker.phone == phone).first()
         if not worker:
