@@ -128,10 +128,10 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="SecureSync AI API", version="3.0.0-soar", lifespan=lifespan)
 
 # --- Middlewares ---
-# Phase 3: Ultra-relaxed CORS for debugging (MUST BE FIRST)
+# Phase 3: CORS origins are now configured via environment-backed settings.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=config.CORS_ORIGINS,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -163,7 +163,7 @@ async def root():
     return {
         "status": "ok",
         "message": "SecureSync AI Neural API v3.0 — Phase 3 Soar",
-        "triggers": 8,
+        "triggers": len(trigger_service.TRIGGERS),
         "zones": len(config.ZONES),
         "phase": "3 — Soar",
         "ml_models": ["IsolationForest", "LSTM-Forecast", "FraudRingGraph"],

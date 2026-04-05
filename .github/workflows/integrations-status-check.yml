@@ -8,9 +8,17 @@ on:
       - contributions/bhima
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: securesync-integrations-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   integrations-status-shape:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout

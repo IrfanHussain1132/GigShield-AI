@@ -1,6 +1,8 @@
 # SecureSync AI — Mock Partner Database for Phase 3
 # Simulates Swiggy/Zomato Partner ID verification API
 
+import config
+
 MOCK_PARTNERS = {
     # ── Chennai (Zone 4) ──
     # ── Chennai (Zone 1 & 4) ──
@@ -265,8 +267,8 @@ DEFAULT_PARTNER = {
 }
 
 
-def lookup_partner(partner_id: str) -> dict | None:
-    """Look up a partner by ID. Returns partner data or default fallback."""
+def lookup_partner(partner_id: str, strict_mode: bool | None = None) -> dict | None:
+    """Look up a partner by ID. Strict mode rejects unknown IDs."""
     # Exact match
     if partner_id.upper() in MOCK_PARTNERS:
         return MOCK_PARTNERS[partner_id.upper()]
@@ -274,5 +276,10 @@ def lookup_partner(partner_id: str) -> dict | None:
     for pid, data in MOCK_PARTNERS.items():
         if pid.lower() == partner_id.lower():
             return data
-    # For demo flexibility: accept any input and return default
+
+    strict = config.STRICT_MOCK_PARTNER_IDS if strict_mode is None else strict_mode
+    if strict:
+        return None
+
+    # Non-strict mode: demo fallback profile
     return DEFAULT_PARTNER

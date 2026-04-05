@@ -217,6 +217,15 @@ const actions = {
     }
   },
 
+  prefillPartnerId(partnerId) {
+    state.partnerId = String(partnerId || '').trim();
+    const input = document.getElementById('partner-id-input');
+    if (!input) return;
+    input.value = state.partnerId;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.focus();
+  },
+
   async verifyPartner() {
     const input = document.getElementById('partner-id-input');
     if (input) state.partnerId = input.value.trim();
@@ -332,6 +341,76 @@ const actions = {
       state.payoutTotal = total;
       router.navigate('payouts');
     } catch (e) { router.navigate('payouts'); }
+  },
+
+  async goToPayoutCelebration() {
+    const pid = state.partnerId || 'SW-982341';
+    try {
+      const latest = await api(`/dashboard/latest-payout/${pid}`, {}, state);
+      if (latest) {
+        state.latestPayout = latest;
+      }
+    } catch (e) {
+      console.warn('Latest payout fetch issue');
+    }
+
+    if (!state.latestPayout) {
+      const recent = Array.isArray(state.payoutHistory) && state.payoutHistory.length > 0 ? state.payoutHistory[0] : null;
+      state.latestPayout = recent ? {
+        amount: Number(recent.amount || 0),
+        type: recent.type || 'Heavy Rain',
+        status: recent.status || 'Credited',
+        signal: recent.reason || `Disruption detected in ${state.user.zone || 'Zone 4'}`,
+        upi_ref: recent.upi_ref || 'SIM-PAYOUT-001',
+        time: recent.time || '',
+        date: recent.date || 'Today',
+        zone: state.user.zone || 'Zone 4',
+        city: state.user.city || 'South Chennai',
+        fraud_score: Number(recent.fraud_score || 0),
+        processing_ms: Number(recent.processing_ms || 108000),
+      } : {
+        amount: 408,
+        type: 'Heavy Rain',
+        status: 'Credited',
+        signal: `Disruption detected in ${state.user.zone || 'Zone 4'}`,
+        upi_ref: 'SIM-PAYOUT-001',
+        time: 'Now',
+        date: 'Today',
+        zone: state.user.zone || 'Zone 4',
+        city: state.user.city || 'South Chennai',
+        fraud_score: 0.12,
+        processing_ms: 108000,
+      };
+    }
+
+    router.navigate('payout_celebration');
+  },
+
+  simulateSuccessPayment() {
+    if (!state.dashboard) state.dashboard = {};
+    state.dashboard.has_active_policy = true;
+    state.dashboard.coverage = state.dashboard.coverage || 92;
+    state.dashboard.policy_streak = Math.max(1, Number(state.dashboard.policy_streak || 0));
+    alert('Mock Razorpay success simulated. Policy state refreshed.');
+    router.navigate('home');
+  },
+
+  simulateTrigger() {
+    const amount = state.tier === 'premium' ? 510 : 408;
+    state.latestPayout = {
+      amount,
+      type: state.tier === 'premium' ? 'AQI Danger' : 'Heavy Rain',
+      status: 'Credited',
+      signal: `Simulated trigger fired in ${state.user.zone || 'Zone 4'}`,
+      upi_ref: `SIM-${Date.now()}`,
+      time: 'Now',
+      date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      zone: state.user.zone || 'Zone 4',
+      city: state.user.city || 'South Chennai',
+      fraud_score: 0.18,
+      processing_ms: 93000,
+    };
+    router.navigate('payout_celebration');
   },
 
   logout() {

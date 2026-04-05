@@ -25,6 +25,19 @@ def test_webhook_enabled_without_secret_returns_503(client, monkeypatch):
     assert response.json()["detail"] == "Razorpay webhook secret not configured"
 
 
+def test_webhook_disabled_in_prod_returns_503(client, monkeypatch):
+    monkeypatch.setattr("config.ENV_PROD", True)
+    monkeypatch.setattr("config.ENABLE_RAZORPAY_WEBHOOK", False)
+
+    response = client.post(
+        "/api/v1/payments/razorpay/webhook",
+        json={"event": "payment.captured", "payload": {}},
+    )
+
+    assert response.status_code == 503
+    assert response.json()["detail"] == "Razorpay webhook is disabled in production"
+
+
 def test_webhook_rejects_invalid_signature_when_enabled(client, monkeypatch):
     monkeypatch.setattr("config.ENABLE_RAZORPAY_WEBHOOK", True)
     monkeypatch.setattr("config.RAZORPAY_WEBHOOK_SECRET", "supersecret")
@@ -86,3 +99,27 @@ def test_webhook_updates_payout_status_with_valid_signature(client, db_session, 
 
     refreshed = db_session.query(models.Payout).filter(models.Payout.id == payout.id).first()
     assert refreshed.status == "Credited"
+
+
+def test_webhook_unknown_payout_returns_ignored(client, monkeypatch):
+    monkeypatch.setattr("config.ENV_PROD", False)
+    monkeypatch.setattr("config.ENABLE_RAZORPAY_WEBHOOK", False)
+
+    response = client.post(
+        "/api/v1/payments/razorpay/webhook",
+        json={
+            "event": "payment.captured",
+            "payload": {
+                "payment": {
+                    "entity": {
+                        "id": "pay_missing_001",
+                        "notes": {"payout_id": "99999"},
+                    }
+                }
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "ignored"
+    assert response.json()["reason"] == "payout_not_found"

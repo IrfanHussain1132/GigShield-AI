@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-securesync}
       POSTGRES_DB: ${POSTGRES_DB:-securesync}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -22,7 +22,7 @@ services:
     container_name: securesync-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.1
@@ -32,7 +32,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     ports:
-      - "2181:2181"
+      - "127.0.0.1:2181:2181"
 
   kafka:
     image: confluentinc/cp-kafka:7.6.1
@@ -51,7 +51,7 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     ports:
-      - "29092:29092"
+      - "127.0.0.1:29092:29092"
 
   backend:
     build:
@@ -103,7 +103,7 @@ services:
       TOMTOM_KEY: ${TOMTOM_KEY:-}
       GROQ_API_KEY: ${GROQ_API_KEY:-}
     ports:
-      - "${BACKEND_PORT:-8000}:8000"
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
 
   frontend:
     build:
@@ -121,7 +121,7 @@ services:
       VITE_PHASE2_MOCK_OTP: ${ENABLE_PHASE2_MOCK_OTP:-false}
       VITE_PHASE2_MOCK_OTP_CODE: ${PHASE2_MOCK_OTP_CODE:-000000}
     ports:
-      - "${FRONTEND_PORT:-5173}:5173"
+      - "127.0.0.1:${FRONTEND_PORT:-5173}:5173"
 
 volumes:
   postgres_data:
