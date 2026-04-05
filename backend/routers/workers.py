@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 from database import get_db
 import models
 from pydantic import BaseModel, Field
-from seed_data import lookup_partner
 from services import premium_service
+from services import partner_provider_service
 from services.auth_service import require_current_user
 
 router = APIRouter(prefix="/api/v1/workers", tags=["workers"])
@@ -40,10 +40,19 @@ async def verify_partner(
     current_user: dict = Depends(require_current_user),
 ):
     """
-    Verify Swiggy/Zomato Partner ID against mock partner database.
+    Verify Swiggy/Zomato Partner ID against configured partner provider.
     Creates or updates Worker record in DB.
     """
-    partner_data = lookup_partner(request.partner_id)
+    try:
+        partner_data = partner_provider_service.resolve_partner(
+            partner_id=request.partner_id,
+            platform=request.platform,
+        )
+    except ValueError as provider_error:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(provider_error),
+        ) from provider_error
 
     if not partner_data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Partner ID not recognized")
@@ -126,6 +135,7 @@ async def verify_partner(
         "weekly_income": worker.weekly_income,
         "worker_id": worker.id,
         "partner_id": requested_partner_id,
+        **partner_provider_service.provider_metadata(),
     }
 
 

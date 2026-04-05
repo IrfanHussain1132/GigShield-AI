@@ -53,3 +53,27 @@ async def require_current_user(credentials: HTTPAuthorizationCredentials = Depen
         )
 
     return payload
+
+
+def _is_admin_user(payload: dict) -> bool:
+    phone = str(payload.get("sub") or "").strip()
+    if phone and phone in config.ADMIN_ALLOWED_PHONES:
+        return True
+
+    worker_id = payload.get("worker_id")
+    try:
+        worker_id_int = int(worker_id)
+    except (TypeError, ValueError):
+        return False
+    return worker_id_int in config.ADMIN_ALLOWED_WORKER_IDS
+
+
+async def require_admin_user(current_user: dict = Depends(require_current_user)):
+    """Strict admin dependency using explicit allowlists."""
+    if _is_admin_user(current_user):
+        return current_user
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Admin access denied",
+    )

@@ -3,6 +3,23 @@ import { t, formatCurrency } from '../utils/i18n.js';
 
 const PROFILE_IMG = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBdF9EXjddnq_SOQujAqCIrzQjgJYmUBptDL4Bxyfc7zS_1eirVNzPYZHQ6Ws8a8nK76S37UohBt4KOjkn91TRwOMsG3ypbyPl7WrQplzOUbwyke19vIfSRs5iSL79GRAJkXzLcF6iIAqmy9oyNeaCsyLEJFzkAt6t8nRwY5XksLOvV8AZCuIyO8TYAYb3sUCixHqiUuoNalOcOW_DduVoWr8qiOYsnbA0U3p_rYH4FZmyifdChS_rqqfpNKezygamN3YAIg7aOE2Qf';
 
+const DEMO_PARTNER_IDS = {
+  swiggy: ['SW-982341', 'SW-223344', 'SW-667788'],
+  zomato: ['ZM-112233', 'ZM-556677', 'ZM-445521'],
+};
+
+function demoIdChips(state) {
+  const platform = state.platform === 'zomato' ? 'zomato' : 'swiggy';
+  const ids = DEMO_PARTNER_IDS[platform];
+  return `
+  <div class="bg-surface-container-lowest rounded-[20px] p-4 border border-outline-variant/20 shadow-sm">
+    <p class="text-[10px] font-black uppercase tracking-[0.2em] text-outline mb-3">Demo Partner IDs (tap to fill)</p>
+    <div class="flex flex-wrap gap-2">
+      ${ids.map((id) => `<button type="button" onclick="actions.prefillPartnerId('${id}')" class="px-3 py-2 rounded-xl bg-white border border-outline-variant/20 text-xs font-black tracking-wide text-primary hover:bg-primary/[0.04] transition-colors">${id}</button>`).join('')}
+    </div>
+  </div>`;
+}
+
 function appBar(state) {
   const name = state.user?.name || 'Partner';
   return `
@@ -72,6 +89,7 @@ export function verificationStartScreen(state) {
             <span class="material-symbols-outlined text-2xl text-primary/30 group-focus-within:text-primary transition-colors">fingerprint</span>
           </div>
         </div>
+        ${demoIdChips(state)}
         <div id="id-guide" class="hidden animate-in fade-in slide-in-from-top-2 bg-primary/[0.03] p-5 rounded-[24px] text-xs font-semibold text-primary/70 leading-relaxed border border-primary/10">
           <div class="flex items-start gap-3">
              <span class="material-symbols-outlined text-lg mt-0.5">info</span>

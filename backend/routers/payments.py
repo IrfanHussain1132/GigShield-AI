@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
@@ -10,6 +11,7 @@ from database import get_db
 from services import event_bus_service, notification_service, payout_lifecycle_service
 
 router = APIRouter(prefix="/api/v1/payments", tags=["payments"])
+logger = logging.getLogger(__name__)
 
 
 def _verify_razorpay_signature(raw_body: bytes, signature: str) -> bool:
@@ -49,6 +51,12 @@ def _resolve_target_status(event_name: str) -> str | None:
 async def razorpay_webhook(request: Request, db: Session = Depends(get_db)):
     raw_body = await request.body()
     signature = request.headers.get("X-Razorpay-Signature", "")
+
+    if config.ENV_PROD and not config.ENABLE_RAZORPAY_WEBHOOK:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Razorpay webhook is disabled in production",
+        )
 
     if config.ENABLE_RAZORPAY_WEBHOOK:
         if not config.RAZORPAY_WEBHOOK_SECRET:
@@ -95,7 +103,21 @@ async def razorpay_webhook(request: Request, db: Session = Depends(get_db)):
             payout = None
 
     if payout is None:
-        return {"status": "accepted", "event": event_name, "updated": False, "reason": "payout_not_found"}
+        logger.warning(
+            "Webhook payout not found: event=%s, upi_candidates=%s, notes=%s",
+            event_name,
+            upi_candidates,
+            notes,
+        )
+        event_bus_service.publish_event(
+            "payment.webhook.unmatched",
+            {
+                "event_name": event_name,
+                "upi_candidates": upi_candidates,
+                "notes": notes,
+            },
+        )
+        return {"status": "ignored", "event": event_name, "updated": False, "reason": "payout_not_found"}
 
     external_ref = entity.get("id") or payout.upi_ref
     reason = f"Webhook event {event_name}"

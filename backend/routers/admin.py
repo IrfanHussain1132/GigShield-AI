@@ -8,11 +8,16 @@ from database import get_db
 import models
 import config
 from services import trigger_service, ml_service, fraud_graph_service, location_validation_service
+from services.auth_service import require_admin_user
 from utils.time_utils import utcnow
 from datetime import timedelta
 import json
 
-router = APIRouter(prefix="/api/v1/admin", tags=["admin"])
+router = APIRouter(
+    prefix="/api/v1/admin",
+    tags=["admin"],
+    dependencies=[Depends(require_admin_user)],
+)
 
 
 @router.get("/overview")

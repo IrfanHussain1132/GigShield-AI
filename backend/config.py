@@ -6,6 +6,17 @@ def _csv_env(name: str, default: str) -> list[str]:
     raw = os.getenv(name, default)
     return [item.strip() for item in raw.split(",") if item.strip()]
 
+
+def _csv_int_env(name: str, default: str) -> list[int]:
+    values = _csv_env(name, default)
+    parsed: list[int] = []
+    for value in values:
+        try:
+            parsed.append(int(value))
+        except ValueError:
+            continue
+    return parsed
+
 # ── API Keys ──
 OPENWEATHER_KEY = os.getenv("OPENWEATHER_KEY", "")
 IQAIR_KEY = os.getenv("IQAIR_KEY", "")
@@ -22,6 +33,12 @@ if ENV_PROD and JWT_SECRET == "dev-only-change-me":
 
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXPIRY_HOURS = int(os.getenv("JWT_EXPIRY_HOURS", "1"))
+ADMIN_ALLOWED_PHONES = _csv_env("ADMIN_ALLOWED_PHONES", "")
+ADMIN_ALLOWED_WORKER_IDS = _csv_int_env("ADMIN_ALLOWED_WORKER_IDS", "")
+
+# ── Partner Verification Provider Controls ──
+PARTNER_PROVIDER_MODE = os.getenv("PARTNER_PROVIDER_MODE", "mock").strip().lower()
+STRICT_MOCK_PARTNER_IDS = os.getenv("STRICT_MOCK_PARTNER_IDS", "true").lower() == "true"
 
 # ── Database ──
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./securesync.db")

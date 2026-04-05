@@ -25,11 +25,14 @@ from utils.time_utils import utcnow
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# --- 8 Neural Triggers (per Policy Reference §3.2 and §5) ---
+# --- Trigger Definitions (per Policy Reference §3.2 and §5) ---
 TRIGGERS = {
     "Heavy Rain":       {"threshold": 64.5,  "unit": "mm/day",  "payout_hrs": 4},
-    "AQI Danger":       {"threshold": 300,   "unit": "AQI",     "payout_hrs": 5},
+    "Very Heavy Rain":  {"threshold": 124.5, "unit": "mm/day",  "payout_hrs": 6},
+    "AQI Danger":       {"threshold": 301,   "unit": "AQI",     "payout_hrs": 5},
+    "AQI Severe":       {"threshold": 401,   "unit": "AQI",     "payout_hrs": 6},
     "Heat Wave":        {"threshold": 40.0,  "unit": "°C",      "payout_hrs": 4},
+    "Severe Heat":      {"threshold": 45.0,  "unit": "°C",      "payout_hrs": 6},
     "Red Alert":        {"threshold": 1,     "unit": "Alert",   "payout_hrs": 8},
     "Dense Fog":        {"threshold": 200,   "unit": "meters",  "payout_hrs": 4},
     "Gridlock":         {"threshold": 8,     "unit": "km/h",    "payout_hrs": 3},
@@ -38,10 +41,10 @@ TRIGGERS = {
 }
 
 # Plan-based trigger filtering per Policy §2.1
-# Basic plan: Heavy Rain, Dense Fog, Gridlock
+# Basic plan: rain tiers + red alert + fog + gridlock
 # Premium plan: all triggers
-BASIC_TRIGGERS = {"Heavy Rain", "Dense Fog", "Red Alert", "Gridlock"}
-PREMIUM_ONLY_TRIGGERS = {"AQI Danger", "Heat Wave", "Bandh", "Platform Outage"}
+BASIC_TRIGGERS = {"Heavy Rain", "Very Heavy Rain", "Red Alert", "Dense Fog", "Gridlock"}
+PREMIUM_ONLY_TRIGGERS = {"AQI Danger", "AQI Severe", "Heat Wave", "Severe Heat", "Bandh", "Platform Outage"}
 
 # --- Shared In-Memory Data ---
 _zone_cache = {} # Cache for dashboard reads
@@ -86,6 +89,53 @@ async def check_platforms(client):
         return fails >= 2
     except Exception: return False
 
+
+def _build_active_triggers(
+    weather: dict,
+    aqi: int,
+    speed: float,
+    platform_down: bool,
+    current_hour: int | None = None,
+) -> list[dict]:
+    """Derive active trigger list with mutually exclusive severity tiers."""
+    active: list[dict] = []
+
+    rain_mm = float(weather.get("rain", 0) or 0)
+    temp_c = float(weather.get("temp", 0) or 0)
+    vis_m = float(weather.get("vis", 10000) or 10000)
+    hour = datetime.now().hour if current_hour is None else int(current_hour)
+
+    # Rainfall tiers: only highest severity should fire in one cycle.
+    if rain_mm >= 244.4:
+        active.append({"type": "Red Alert", "val": f"{rain_mm}mm", "src": ["OpenMeteo", "IMD-RS"], "conf": True})
+    elif rain_mm >= TRIGGERS["Very Heavy Rain"]["threshold"]:
+        active.append({"type": "Very Heavy Rain", "val": f"{rain_mm}mm", "src": ["OpenMeteo", "IMD-RS"], "conf": True})
+    elif rain_mm >= TRIGGERS["Heavy Rain"]["threshold"]:
+        active.append({"type": "Heavy Rain", "val": f"{rain_mm}mm", "src": ["OpenMeteo", "IMD-RS"], "conf": True})
+
+    # AQI tiers: avoid paying both levels in one cycle.
+    if aqi >= TRIGGERS["AQI Severe"]["threshold"]:
+        active.append({"type": "AQI Severe", "val": f"{aqi} AQI", "src": ["IQAir", "WAQI"], "conf": True})
+    elif aqi >= TRIGGERS["AQI Danger"]["threshold"]:
+        active.append({"type": "AQI Danger", "val": f"{aqi} AQI", "src": ["IQAir", "WAQI"], "conf": True})
+
+    # Heat tiers: avoid dual trigger on severe heat.
+    if temp_c >= TRIGGERS["Severe Heat"]["threshold"]:
+        active.append({"type": "Severe Heat", "val": f"{temp_c}°C", "src": ["OpenMeteo", "NASA-HT"], "conf": True})
+    elif temp_c >= TRIGGERS["Heat Wave"]["threshold"]:
+        active.append({"type": "Heat Wave", "val": f"{temp_c}°C", "src": ["OpenMeteo", "NASA-HT"], "conf": True})
+
+    if vis_m < TRIGGERS["Dense Fog"]["threshold"]:
+        active.append({"type": "Dense Fog", "val": f"{vis_m}m", "src": ["OpenMeteo", "Vis-Obs"], "conf": True})
+
+    if speed <= TRIGGERS["Gridlock"]["threshold"] and (8 <= hour <= 11 or 17 <= hour <= 21):
+        active.append({"type": "Gridlock", "val": f"{speed}km/h", "src": ["TomTom", "PeakLogic"], "conf": True})
+
+    if platform_down:
+        active.append({"type": "Platform Outage", "val": "System Offline", "src": ["Probe-S", "Probe-Z"], "conf": True})
+
+    return active
+
 # ═══════════════════════════════════════════
 # Neural Inference & Payout Engine
 # ═══════════════════════════════════════════
@@ -95,26 +145,7 @@ async def monitor_zone(db, client, name, info, platform_down):
     # PARALLEL POLL: 3 network calls in 1 step
     weather, aqi, speed = await asyncio.gather(fetch_weather_data(client, lat, lon), fetch_aqi(client, lat, lon), fetch_traffic(client, lat, lon))
     
-    active = []
-    # 1. Heavy Rain (Dual confirmed if signal > 64.5)
-    if weather["rain"] >= TRIGGERS["Heavy Rain"]["threshold"]:
-        active.append({"type": "Heavy Rain", "val": f"{weather['rain']}mm", "src": ["OpenMeteo", "IMD-RS"], "conf": True})
-    # 2. AQI Danger
-    if aqi >= TRIGGERS["AQI Danger"]["threshold"]:
-        active.append({"type": "AQI Danger", "val": f"{aqi} AQI", "src": ["IQAir", "WAQI"], "conf": True})
-    # 3. Heat Wave
-    if weather["temp"] >= TRIGGERS["Heat Wave"]["threshold"]:
-        active.append({"type": "Heat Wave", "val": f"{weather['temp']}°C", "src": ["OpenMeteo", "NASA-HT"], "conf": True})
-    # 4. Dense Fog
-    if weather["vis"] < TRIGGERS["Dense Fog"]["threshold"]:
-        active.append({"type": "Dense Fog", "val": f"{weather['vis']}m", "src": ["OpenMeteo", "Vis-Obs"], "conf": True})
-    # 5. Gridlock (Peak Hours)
-    h = datetime.now().hour
-    if speed <= TRIGGERS["Gridlock"]["threshold"] and (8<=h<=11 or 17<=h<=21):
-        active.append({"type": "Gridlock", "val": f"{speed}km/h", "src": ["TomTom", "PeakLogic"], "conf": True})
-    # 6. Platform Outage
-    if platform_down:
-        active.append({"type": "Platform Outage", "val": "System Offline", "src": ["Probe-S", "Probe-Z"], "conf": True})
+    active = _build_active_triggers(weather=weather, aqi=aqi, speed=speed, platform_down=platform_down)
 
     # Cache for dashboard reads
     _zone_cache[name] = {"w": weather, "a": aqi, "s": speed, "tr": active, "ts": time.time()}

@@ -9,7 +9,7 @@ from sqlalchemy.pool import StaticPool
 
 import models
 from database import get_db
-from routers import auth, dashboard, integrations, payments, policies, workers
+from routers import admin, auth, dashboard, integrations, payments, policies, workers
 from services.auth_service import create_token
 from utils.time_utils import utcnow
 
@@ -39,6 +39,7 @@ def client(db_session):
     app.include_router(workers.router)
     app.include_router(policies.router)
     app.include_router(dashboard.router)
+    app.include_router(admin.router)
     app.include_router(payments.router)
     app.include_router(integrations.router)
 
