@@ -104,17 +104,9 @@ const actions = {
     slider.scrollTo({ left: 0, behavior: 'auto' });
 
     slider.addEventListener('scroll', () => {
-        const slides = Array.from(slider.querySelectorAll(':scope > section'));
         const currentLeft = slider.scrollLeft;
-        let closestIndex = 0;
-        let closestDistance = Infinity;
-        slides.forEach((slide, index) => {
-            const distance = Math.abs(slide.offsetLeft - currentLeft);
-            if (distance < closestDistance) {
-                closestDistance = distance;
-                closestIndex = index;
-            }
-        });
+        const width = slider.clientWidth || 1;
+        const closestIndex = Math.round(currentLeft / width);
         if (closestIndex !== state.slideIndex) {
             state.slideIndex = closestIndex;
             actions.updateOnboardingDots();
