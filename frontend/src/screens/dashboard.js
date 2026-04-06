@@ -427,7 +427,7 @@ export function payoutsScreen(state) {
 
   return `
 <div class="min-h-full bg-surface flex flex-col pb-32">
-  <header class="fixed top-0 w-full z-50 bg-stone-50/90 backdrop-blur-md flex justify-between items-center px-6 py-4">
+  <header class="fixed top-0 w-full z-50 bg-stone-50 flex justify-between items-center px-6 py-4 border-b border-outline-variant/10">
     <div class="flex items-center gap-3">
       <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center overflow-hidden">
         <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings:'FILL' 1;">account_circle</span>
@@ -653,7 +653,7 @@ export function accountScreen(state) {
   const progressPct = Math.max(35, Math.min(92, score));
   return `
 <div class="min-h-full bg-[#f8faf9] flex flex-col pb-32">
-  <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-outline-variant/5">
+  <header class="bg-white sticky top-0 z-50 border-b border-outline-variant/10 shadow-sm">
     <div class="px-6 py-4 w-full flex items-center justify-between">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white font-black text-lg shadow-sm border border-white/20">

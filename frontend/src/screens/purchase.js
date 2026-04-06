@@ -54,7 +54,7 @@ export function premiumScreen(state) {
 
   return `
 <div class="min-h-full bg-surface flex flex-col">
-  <header class="flex justify-between items-center w-full px-6 py-4 bg-white/60 backdrop-blur-md sticky top-0 z-20">
+  <header class="flex justify-between items-center w-full px-6 py-4 bg-white sticky top-0 z-20 border-b border-outline-variant/10 shadow-sm">
     <div class="flex items-center gap-3">
       ${renderAvatar(state)}
       <h1 class="font-headline font-black tracking-tighter text-primary text-xl">SecureSync AI</h1>
