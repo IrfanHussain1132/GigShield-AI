@@ -427,10 +427,10 @@ export function payoutsScreen(state) {
 
   return `
 <div class="min-h-full bg-surface flex flex-col pb-32">
-  <header class="fixed top-0 w-full z-50 bg-stone-50 flex justify-between items-center px-6 py-4 border-b border-outline-variant/10">
+  <header class="sticky top-0 w-full z-50 bg-stone-50 flex justify-between items-center px-6 py-4 border-b border-outline-variant/10">
     <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center overflow-hidden">
-        <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings:'FILL' 1;">account_circle</span>
+      <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-black text-lg shadow-sm border border-white/20">
+        ${(state.user?.name || 'Partner').charAt(0).toUpperCase()}
       </div>
       <h1 class="font-headline font-black tracking-tighter text-teal-900 text-lg">SecureSync AI</h1>
     </div>
@@ -439,7 +439,7 @@ export function payoutsScreen(state) {
     </button>
   </header>
 
-  <main class="pt-24 pb-8 px-4 max-w-[390px] mx-auto min-h-screen space-y-6">
+  <main class="pt-6 pb-8 px-5 w-full mx-auto space-y-6">
     <!-- Section Title -->
     <div class="mb-2 px-2">
       <h2 class="font-headline text-2xl font-extrabold text-on-surface tracking-tight">Your Payouts</h2>
