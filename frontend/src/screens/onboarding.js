@@ -18,7 +18,7 @@ export function onboardingScreen(state) {
     <section class="min-w-full snap-center flex flex-col items-center px-6 pt-4">
       <div class="w-full rounded-[36px] overflow-hidden mb-6 relative bg-cover bg-center" style="height:420px; background-image: url('/images/onboarding.jpg');">
         <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-        <div class="absolute bottom-5 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-md rounded-3xl px-7 py-4 shadow-2xl flex flex-col items-center border border-white/40 shadow-surface-container/50">
+        <div class="absolute bottom-5 left-1/2 -translate-x-1/2 bg-white rounded-3xl px-7 py-4 shadow-2xl flex flex-col items-center border border-white/40 shadow-surface-container/50">
           <span class="material-symbols-outlined text-error text-2xl mb-1 drop-shadow-sm" style="font-variation-settings:'FILL' 1;">cloud_off</span>
           <div class="flex items-baseline gap-1"><span class="font-headline font-black text-5xl text-on-surface drop-shadow-sm">${formatCurrency(0)}</span></div>
           <span class="text-[10px] font-bold text-outline uppercase tracking-widest mt-1">${t('today_earnings')}</span>
@@ -31,7 +31,7 @@ export function onboardingScreen(state) {
     <section class="min-w-full snap-center flex flex-col items-center px-6 pt-4">
       <div class="w-full rounded-[36px] overflow-hidden mb-6 relative bg-gradient-to-br from-primary-container/20 to-primary/5 flex items-center justify-center border border-primary/10 shadow-inner" style="height:420px;">
         <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/40 via-transparent to-transparent"></div>
-        <div class="text-center p-8 relative z-10 bg-white/40 backdrop-blur-xl rounded-[32px] shadow-2xl shadow-primary/10 border border-white/60 mx-4">
+        <div class="text-center p-8 relative z-10 bg-white/95 rounded-[32px] shadow-2xl shadow-primary/10 border border-white/60 mx-4">
           <span class="material-symbols-outlined text-primary text-7xl mb-4 drop-shadow-md" style="font-variation-settings:'FILL' 1;">shield_with_heart</span>
           <div class="flex items-baseline justify-center gap-1 mb-2"><span class="font-headline font-black text-5xl text-primary drop-shadow-sm">${formatCurrency(47)}</span></div>
           <span class="text-sm font-bold text-primary uppercase tracking-widest bg-primary/10 px-3 py-1 rounded-lg">${t('weekly_coverage') || '/week coverage'}</span>
@@ -44,7 +44,7 @@ export function onboardingScreen(state) {
     <section class="min-w-full snap-center flex flex-col items-center px-6 pt-4">
       <div class="w-full rounded-[36px] overflow-hidden mb-6 relative bg-gradient-to-br from-tertiary-fixed/40 to-tertiary/10 flex items-center justify-center border border-tertiary/10 shadow-inner" style="height:420px;">
         <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-white/40 via-transparent to-transparent"></div>
-        <div class="text-center p-8 relative z-10 bg-white/40 backdrop-blur-xl rounded-[32px] shadow-2xl shadow-tertiary/10 border border-white/60 mx-4 w-[85%]">
+        <div class="text-center p-8 relative z-10 bg-white/95 rounded-[32px] shadow-2xl shadow-tertiary/10 border border-white/60 mx-4 w-[85%]">
           <div class="w-24 h-24 bg-gradient-to-tr from-tertiary to-tertiary-container rounded-full flex items-center justify-center mx-auto mb-5 shadow-lg shadow-tertiary/30 inset-0">
             <span class="material-symbols-outlined text-white text-5xl drop-shadow-md" style="font-variation-settings:'FILL' 1;">bolt</span>
           </div>

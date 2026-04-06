@@ -164,14 +164,14 @@ export function homeScreen(state) {
       <div class="absolute -right-8 -bottom-10 text-white/10"><span class="material-symbols-outlined text-[180px]">payments</span></div>
       <div class="relative z-10 flex justify-between items-start mb-4">
         <div><h3 class="font-headline font-bold text-lg mb-1">${t('today_earnings')}</h3><p class="text-white/70 text-xs">${t('earnings_estimate_desc') || 'Trigger-adjusted estimate'}</p></div>
-        <div class="bg-white/15 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div><span class="text-[10px] font-bold uppercase tracking-widest">${t('live')}</span></div>
+        <div class="bg-white/20 px-3 py-1 rounded-full flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div><span class="text-[10px] font-bold uppercase tracking-widest">${t('live')}</span></div>
       </div>
       <div class="relative z-10 flex items-baseline gap-2 mb-5"><span class="font-headline font-black text-4xl tracking-tighter">${formatCurrency(dash.today_earnings || 0)}</span></div>
       <div class="relative z-10 flex items-center gap-3 mb-5">
         <span class="px-4 py-2 rounded-full bg-white/12 border border-white/15 text-sm font-bold">8 hrs active</span>
         <span class="px-4 py-2 rounded-full bg-white/12 border border-white/15 text-sm font-bold text-tertiary-fixed-dim">+12%</span>
       </div>
-      <button onclick="actions.goToPayouts()" class="relative z-10 w-full bg-white/20 hover:bg-white/30 backdrop-blur-md py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all">${t('view_history')} <span class="material-symbols-outlined">history</span></button>
+      <button onclick="actions.goToPayouts()" class="relative z-10 w-full bg-white/20 hover:bg-white/30 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all">${t('view_history')} <span class="material-symbols-outlined">history</span></button>
     </section>
 
     <section>
@@ -455,7 +455,7 @@ export function payoutsScreen(state) {
         </div>
       </div>
       <div class="bg-primary-container p-5 rounded-xl shadow-[0_8px_24px_rgba(0,94,82,0.12)] flex flex-col justify-between h-32 relative overflow-hidden">
-        <div class="absolute -right-4 -top-4 w-16 h-16 bg-white/10 rounded-full blur-xl"></div>
+        <div class="absolute -right-4 -top-4 w-24 h-24 bg-gradient-to-bl from-white/20 to-transparent rounded-bl-full"></div>
         <p class="text-on-primary-container text-xs font-semibold uppercase tracking-wider">This Month</p>
         <div class="mt-auto">
           <span class="rupee-symbol text-white text-xl">₹</span>
@@ -616,15 +616,15 @@ export function payoutCelebrationScreen(state) {
     </div>
 
     <!-- Processing info -->
-    <div class="bg-white/15 backdrop-blur-sm rounded-2xl p-4 flex items-center justify-center gap-2 text-white/90 mb-6">
+    <div class="bg-white/25 rounded-2xl p-4 flex items-center justify-center gap-2 text-white/90 mb-6 border border-white/10">
       <span class="material-symbols-outlined text-lg text-white/70">bolt</span>
       <span class="text-sm font-medium">${processLabel}</span>
     </div>
 
     <!-- Zone chip -->
     <div class="flex justify-center gap-2 mb-8">
-      <span class="px-4 py-2 bg-white/15 backdrop-blur-sm rounded-full text-white text-sm font-bold">${zone}</span>
-      <span class="px-4 py-2 bg-white/15 backdrop-blur-sm rounded-full text-white text-sm font-bold">${city}</span>
+      <span class="px-4 py-2 bg-white/25 rounded-full text-white text-sm font-bold border border-white/10">${zone}</span>
+      <span class="px-4 py-2 bg-white/25 rounded-full text-white text-sm font-bold border border-white/10">${city}</span>
     </div>
 
     <!-- CTA -->
@@ -778,7 +778,7 @@ export function accountScreen(state) {
     <!-- Loyalty Rewards & Savings (Integrated) -->
     <section class="bg-gradient-to-br from-[#004d40] to-[#00251a] p-1 rounded-[32px] overflow-hidden shadow-xl shadow-primary/10">
       <div class="p-6 text-white relative">
-        <div class="absolute top-[-20px] right-[-20px] w-40 h-40 bg-secondary-fixed/10 rounded-full blur-3xl"></div>
+        <div class="absolute top-[-20px] right-[-20px] w-48 h-48 bg-gradient-to-bl from-secondary-fixed/20 to-transparent rounded-bl-full"></div>
         
         <div class="flex justify-between items-start mb-8 relative z-10">
           <div>

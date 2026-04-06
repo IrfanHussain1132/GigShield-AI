@@ -98,7 +98,7 @@ export function premiumScreen(state) {
       </button>
 
       <button type="button" onclick="actions.selectTier('premium')" class="${plusSel ? 'bg-gradient-to-br from-[#FFFCF5] to-white border-[#F59E0B] shadow-2xl shadow-amber-500/20 scale-[1.02]' : 'bg-surface-container border-transparent opacity-80 hover:opacity-100'} border border-2 rounded-[2rem] p-5 transition-all duration-300 text-left relative overflow-hidden group">
-        ${plusSel ? '<div class="absolute -top-10 -right-10 w-32 h-32 bg-amber-500/10 blur-2xl rounded-full"></div>' : ''}
+        ${plusSel ? '<div class="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-bl from-amber-500/20 to-transparent rounded-bl-full"></div>' : ''}
         <div class="flex justify-between items-start mb-4 relative z-10">
           <span class="${plusSel ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-on-surface/5 text-on-surface-variant border-on-surface/5'} text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border shadow-sm">Premium</span>
           ${plusSel ? '<span class="material-symbols-outlined text-amber-500 text-[24px] drop-shadow-sm animate-pulse" style="font-variation-settings:\'FILL\' 1;">check_circle</span>' : '<div class="w-6 h-6 rounded-full border-2 border-outline-variant/60 shadow-inner"></div>'}
@@ -138,7 +138,7 @@ export function premiumScreen(state) {
     </section>
   </main>
 
-  <footer class="mt-auto px-6 py-6 bg-gradient-to-t from-surface via-surface to-transparent shadow-[0_-20px_40px_rgba(252,249,248,0.9)] z-10 sticky bottom-0">
+  <footer class="mt-auto px-6 py-6 bg-gradient-to-t from-surface via-surface to-transparent pt-12 z-10 sticky bottom-0">
     <div class="space-y-4">
       <button onclick="actions.buyPolicy()" class="btn btn-primary h-20 w-full rounded-[28px] shadow-2xl shadow-primary/30 pointer-events-auto active:scale-95 transition-transform flex items-center px-8">
         <span class="flex-1 text-left font-black uppercase tracking-widest text-sm">${t('buy_weekly') || 'Buy Weekly Cover'}</span>
@@ -284,8 +284,8 @@ export function confirmationScreen(state) {
 
   <main class="flex-grow px-4 pb-32 w-full">
     <section class="py-8 text-center space-y-4">
-      <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary-container/10 relative">
-        <div class="absolute inset-0 bg-primary-container opacity-20 blur-2xl rounded-full"></div>
+      <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary-container/10 relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-primary-container/30 to-transparent rounded-full"></div>
         <span class="material-symbols-outlined text-primary text-4xl relative z-10" style="font-variation-settings:'FILL' 1;">shield_with_heart</span>
       </div>
       <div class="space-y-1">

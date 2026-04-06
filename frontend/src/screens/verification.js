@@ -23,7 +23,7 @@ function demoIdChips(state) {
 function appBar(state) {
   const name = state.user?.name || 'Partner';
   return `
-<header class="top-shell px-6 py-4 flex justify-between items-center w-full border-b border-outline-variant/10 bg-white/60 backdrop-blur-md">
+<header class="top-shell px-6 py-4 flex justify-between items-center w-full border-b border-outline-variant/10">
   <div class="flex items-center gap-3">
     <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-primary-container flex items-center justify-center text-white font-black text-lg shadow-lg border border-white/20">
       ${name.charAt(0).toUpperCase()}
@@ -153,7 +153,7 @@ export function verificationScoreScreen(state) {
 
   <section class="px-6 py-4">
     <div class="bg-surface-container-lowest rounded-[28px] p-6 shadow-[0_8px_32px_rgba(0,94,82,0.08)] relative overflow-hidden">
-      <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+      <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/10 to-transparent rounded-bl-full -mr-8 -mt-8"></div>
       <div class="flex items-center justify-between mb-8">
         <div class="space-y-1">
           <h3 class="font-headline font-bold text-sm text-outline uppercase tracking-wider">${t('verification_score')}</h3>
@@ -182,7 +182,7 @@ export function verificationScoreScreen(state) {
     </div>
   </section>
 
-  <footer class="mt-auto px-6 py-8 bg-gradient-to-t from-surface via-surface to-transparent shadow-[0_-20px_40px_rgba(252,249,248,0.9)] z-10 sticky bottom-0">
+  <footer class="mt-auto px-6 py-8 bg-gradient-to-t from-surface via-surface to-transparent pt-12 z-10 sticky bottom-0">
     <button onclick="actions.goToPremium()" class="btn btn-primary h-20 rounded-[28px] shadow-2xl shadow-primary/30 pointer-events-auto active:scale-95 transition-transform flex items-center px-8 w-full">
       <span class="flex-1 text-left font-black uppercase tracking-widest text-sm">${t('looks_right_continue') || 'Looks Right - Continue'}</span>
       <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-sm border border-white/10 shadow-inner">
