@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from routers import auth, workers, dashboard, policies, payments, integrations, admin, forecast, support
+from routers import auth, workers, dashboard, policies, payments, integrations, admin, forecast, support, payout_simulation
 import models
 from database import engine, SessionLocal
 import config
@@ -104,6 +104,13 @@ async def lifespan(app: FastAPI):
                 )
                 db.add(seed_worker); db.commit()
 
+            # Phase 3 – Scale: Seed rich demo data if DB is sparse
+            try:
+                from seed_demo import seed_demo_data
+                seed_demo_data()
+            except Exception as seed_err:
+                logger.warning("[Startup] Demo seed skipped: %s", seed_err)
+
             _normalize_legacy_money_values(db)
 
             # Phase 3: Build fraud graph from existing data
@@ -157,6 +164,7 @@ app.include_router(integrations.router)
 app.include_router(admin.router)        # Phase 3: Admin dashboard
 app.include_router(forecast.router)     # Phase 3: LSTM forecast
 app.include_router(support.router)      # Phase 3: Groq AI support chatbot
+app.include_router(payout_simulation.router)  # Phase 3 – Scale: Payout simulation
 
 @app.get("/")
 async def root():

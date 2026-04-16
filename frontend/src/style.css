@@ -97,7 +97,6 @@ body {
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
-    user-select: none;
     overscroll-behavior-x: none; /* Prevent horizontal bounce artifacts */
 }
 
@@ -122,8 +121,11 @@ body {
     overflow-y: auto;
     overflow-x: hidden;
     position: relative;
-    /* Smooth scrolling on iOS */
+    /* Fix scrolling: explicit touch-action and padding for bottom nav */
+    touch-action: pan-y;
     -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    scroll-behavior: smooth;
 }
 
 /* Fluid Screen Transitions */
@@ -230,7 +232,9 @@ body {
     border-top: 1px solid rgba(0, 0, 0, 0.04);
     z-index: 1000;
     box-shadow: 0 -8px 30px rgba(0,0,0,0.03);
-    border-radius: 24px 24px 0 0; /* Add rounded top corners for a modern feel */
+    border-radius: 24px 24px 0 0;
+    /* Prevent nav from capturing scroll events */
+    pointer-events: auto;
 }
 
 .nav-item {
@@ -399,6 +403,22 @@ body {
 @keyframes slideIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* Phase 3 – Scale: Pipeline step animation */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.pipeline-step {
+    opacity: 0;
+}
+
+/* Dashboard dot grid pattern */
+.dashboard-dot-grid {
+    background-image: radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px);
+    background-size: 16px 16px;
 }
 
 .user-bubble {

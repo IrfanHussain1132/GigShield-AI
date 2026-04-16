@@ -258,6 +258,125 @@ def calculate_fraud_score(
     except Exception:
         pass  # Don't block payout if graph check fails
 
+    # ══════════════════════════════════════
+    # Layer 5: Historical Weather Cross-Validation (Phase 3 – Scale)
+    # Catches FAKE WEATHER CLAIMS: if no trigger event exists for
+    # this weather type in the worker's zone recently, it's suspicious.
+    # ══════════════════════════════════════
+    try:
+        trigger_type = trigger_event.get("type", "")
+        trigger_zone = trigger_event.get("zone", "")
+        if trigger_type and trigger_zone:
+            six_hours_ago = utcnow() - timedelta(hours=6)
+            matching_events = (
+                db.query(models.TriggerEvent)
+                .filter(
+                    models.TriggerEvent.type == trigger_type,
+                    models.TriggerEvent.zone == trigger_zone,
+                    models.TriggerEvent.timestamp >= six_hours_ago,
+                    models.TriggerEvent.is_confirmed == True,
+                )
+                .count()
+            )
+            # Exclude the current event itself (may just have been inserted)
+            current_event_id = trigger_event.get("event_id")
+            if current_event_id:
+                matching_events = max(matching_events - 1, 0)
+
+            if matching_events == 0:
+                # No confirmed trigger event for this type in zone — high fraud signal
+                score += 0.35
+                flags.append(
+                    f"Weather cross-validation: no confirmed '{trigger_type}' event in {trigger_zone} last 6h"
+                )
+            else:
+                # Check if zone was GREEN alert in last 3 hours
+                three_hours_ago = utcnow() - timedelta(hours=3)
+                green_events = (
+                    db.query(models.TriggerEvent)
+                    .filter(
+                        models.TriggerEvent.zone == trigger_zone,
+                        models.TriggerEvent.timestamp >= three_hours_ago,
+                        models.TriggerEvent.alert_level == "GREEN",
+                    )
+                    .count()
+                )
+                if green_events > 0 and matching_events <= 1:
+                    score += 0.20
+                    flags.append(
+                        f"Weather cross-validation: zone was GREEN recently but claiming '{trigger_type}'"
+                    )
+    except Exception:
+        pass  # Don't block payout on cross-validation failure
+
+    # ══════════════════════════════════════
+    # Layer 6: Clock/Timezone Anomaly Detection (Phase 3 – Scale)
+    # Off-hours claims (midnight–5AM) without corresponding trigger → suspicious
+    # ══════════════════════════════════════
+    try:
+        now = utcnow()
+        claim_hour = now.hour
+        # IST is UTC+5:30
+        ist_hour = (claim_hour + 5) % 24  # Rough IST adjustment
+        if 0 <= ist_hour <= 5:
+            # Off-hours claim — check if there's a real trigger event at this time
+            one_hour_ago = now - timedelta(hours=1)
+            recent_triggers_count = (
+                db.query(models.TriggerEvent)
+                .filter(
+                    models.TriggerEvent.timestamp >= one_hour_ago,
+                    models.TriggerEvent.is_confirmed == True,
+                )
+                .count()
+            )
+            if recent_triggers_count == 0:
+                score += 0.15
+                flags.append(f"Off-hours claim at ~{ist_hour}:00 IST with no active trigger")
+    except Exception:
+        pass
+
+    # ══════════════════════════════════════
+    # Layer 7: Velocity Fraud — Multi-Zone Claims (Phase 3 – Scale)
+    # If worker claims payouts from 2+ different zones within 4 hours → GPS spoofing
+    # ══════════════════════════════════════
+    try:
+        if policy_id and trigger_event.get("zone"):
+            four_hours_ago = utcnow() - timedelta(hours=4)
+            recent_payout_zones = (
+                db.query(models.Payout.type, models.TriggerEvent.zone)
+                .join(models.TriggerEvent, models.Payout.trigger_event_id == models.TriggerEvent.id)
+                .join(models.Policy, models.Payout.policy_id == models.Policy.id)
+                .filter(
+                    models.Policy.worker_id == worker_id,
+                    models.Payout.date >= four_hours_ago,
+                )
+                .all()
+            )
+            other_zones = set(z for _, z in recent_payout_zones if z and z != trigger_event["zone"])
+            if len(other_zones) >= 1:
+                score += 0.30
+                flags.append(
+                    f"Velocity fraud: claims in {trigger_event['zone']} + {', '.join(other_zones)} within 4h"
+                )
+            elif len(other_zones) == 0:
+                # Also check historical zone consistency (last 30 days)
+                thirty_days_ago = utcnow() - timedelta(days=30)
+                zone_count_30d = (
+                    db.query(func.count(func.distinct(models.TriggerEvent.zone)))
+                    .join(models.Payout, models.Payout.trigger_event_id == models.TriggerEvent.id)
+                    .join(models.Policy, models.Payout.policy_id == models.Policy.id)
+                    .filter(
+                        models.Policy.worker_id == worker_id,
+                        models.Payout.date >= thirty_days_ago,
+                    )
+                    .scalar()
+                ) or 0
+                if zone_count_30d >= 3:
+                    score += 0.15
+                    flags.append(f"Zone hopping: claims from {zone_count_30d} different zones in 30 days")
+    except Exception:
+        pass
+
     # Cap at 1.0
     final_score = min(score, 1.0)
     reason = "; ".join(flags) if flags else "Clean — no risk signals"

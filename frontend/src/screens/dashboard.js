@@ -96,7 +96,7 @@ export function homeScreen(state) {
   }).join('');
 
   return `
-<div class="min-h-full bg-stone-50/50 flex flex-col pb-32">
+<div class="min-h-full bg-stone-50/50 flex flex-col pb-6">
   <header class="top-shell px-6 py-4 flex justify-between items-center">
     <div class="flex items-center gap-3">
       <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-black text-lg shadow-sm border border-white/20">
@@ -156,6 +156,23 @@ export function homeScreen(state) {
         <p class="text-[10px] font-bold text-outline uppercase tracking-widest mb-2">${t('policy_streak')}</p>
         <div class="flex items-baseline gap-1"><span class="text-2xl font-black text-on-surface">${dash.policy_streak || 0}</span><span class="text-xs font-bold text-outline">${t('weeks')}</span></div>
         <div class="flex items-center gap-1 mt-2 text-[10px] text-primary font-bold"><span class="material-symbols-outlined text-xs">military_tech</span><span>${t('shield_level')} ${Math.min(5, Math.max(1, Math.ceil((dash.policy_streak || 0) / 2)))}</span></div>
+      </div>
+    </div>
+
+    <!-- Phase 3 – Scale: Earnings Protected & Active Coverage -->
+    <div class="grid grid-cols-2 gap-4">
+      <div class="bg-gradient-to-br from-primary/10 to-primary/5 p-5 rounded-3xl shadow-sm border border-primary/15 relative overflow-hidden">
+        <div class="absolute -right-3 -top-3 w-16 h-16 bg-primary/5 rounded-full"></div>
+        <p class="text-[10px] font-bold text-primary uppercase tracking-widest mb-2">Earnings Protected</p>
+        <div class="flex items-baseline gap-1"><span class="text-2xl font-black text-primary">${formatCurrency(dash.month_total || 0)}</span></div>
+        <div class="flex items-center gap-1 mt-2 text-[10px] text-primary/70 font-bold"><span class="material-symbols-outlined text-xs">shield</span><span>This month</span></div>
+      </div>
+      <div class="bg-surface-container-lowest p-5 rounded-3xl shadow-sm border border-outline-variant/10">
+        <p class="text-[10px] font-bold text-outline uppercase tracking-widest mb-2">Active Coverage</p>
+        <div class="flex items-baseline gap-1"><span class="text-2xl font-black text-on-surface">${dash.has_active_policy ? Math.max(1, Math.min(7, 7 - Math.floor((Date.now() - new Date(dash.policy_start || Date.now()).getTime()) / 86400000))) : 0}</span><span class="text-xs font-bold text-outline">of 7 days</span></div>
+        <div class="mt-2 h-1.5 w-full bg-outline-variant/15 rounded-full overflow-hidden">
+          <div class="h-full bg-gradient-to-r from-primary to-tertiary rounded-full transition-all" style="width:${dash.has_active_policy ? Math.max(14, Math.min(100, ((7 - Math.floor((Date.now() - new Date(dash.policy_start || Date.now()).getTime()) / 86400000)) / 7) * 100)) : 0}%"></div>
+        </div>
       </div>
     </div>
 
@@ -296,7 +313,7 @@ export function coverageScreen(state) {
   const maxWeekly = isPremium ? '4,080' : '816';
 
   return `
-<div class="min-h-full bg-surface flex flex-col pb-32">
+<div class="min-h-full bg-surface flex flex-col pb-6">
   <header class="top-shell px-6 py-4">
     <h1 class="font-headline font-black text-2xl text-on-surface">Coverage Active</h1>
     <p class="text-on-surface-variant text-sm">${status} · ${state.user.zone || 'Zone 4'} · ${state.user.city || 'South Chennai'}</p>
@@ -346,7 +363,7 @@ export function liveZoneScreen(state) {
   const risk = Number(data.rain_mm || 0) > 10 || Number(data.aqi || 0) > 200;
 
   return `
-<div class="min-h-full bg-surface flex flex-col pb-32">
+<div class="min-h-full bg-surface flex flex-col pb-6">
   <header class="top-shell px-6 py-4 flex items-center justify-between">
     <div class="flex items-center gap-2">
       <button onclick="actions.goToDashboard()" aria-label="Back to dashboard" class="material-symbols-outlined text-primary rounded-full p-1.5">arrow_back</button>
@@ -426,7 +443,7 @@ export function payoutsScreen(state) {
   const payoutAmount = Number(detailPayout?.amount || 0);
 
   return `
-<div class="min-h-full bg-surface flex flex-col pb-32">
+<div class="min-h-full bg-surface flex flex-col pb-6">
   <header class="sticky top-0 w-full z-50 bg-stone-50 flex justify-between items-center px-6 py-4 border-b border-outline-variant/10">
     <div class="flex items-center gap-3">
       <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-black text-lg shadow-sm border border-white/20">
@@ -622,10 +639,30 @@ export function payoutCelebrationScreen(state) {
     </div>
 
     <!-- Zone chip -->
-    <div class="flex justify-center gap-2 mb-8">
+    <div class="flex justify-center gap-2 mb-6">
       <span class="px-4 py-2 bg-white/25 rounded-full text-white text-sm font-bold border border-white/10">${zone}</span>
       <span class="px-4 py-2 bg-white/25 rounded-full text-white text-sm font-bold border border-white/10">${city}</span>
     </div>
+
+    <!-- Phase 3 – Scale: Simulation Pipeline Visualization -->
+    ${state.latestPayout?.simulation_steps ? `
+    <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 mb-6 border border-white/10">
+      <p class="text-[10px] font-black text-white/50 uppercase tracking-widest mb-3">AI Pipeline Execution</p>
+      <div class="space-y-2">
+        ${state.latestPayout.simulation_steps.map((step, i) => `
+          <div class="flex items-center gap-3 text-white/90 pipeline-step" style="animation: fadeInUp 0.4s ease-out ${i * 0.15}s both">
+            <div class="w-8 h-8 rounded-xl ${step.stage === 'credited' ? 'bg-tertiary/30' : 'bg-white/15'} flex items-center justify-center flex-shrink-0">
+              <span class="material-symbols-outlined text-lg" style="font-variation-settings:'FILL' 1">${step.icon || 'check'}</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-bold truncate">${step.title}</p>
+              <p class="text-[10px] text-white/50 truncate">${step.detail ? step.detail.substring(0, 60) : ''}</p>
+            </div>
+            <span class="text-[10px] text-white/40 flex-shrink-0">${step.time_ms}ms</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>` : ''}
 
     <!-- CTA -->
     <button onclick="actions.goToDashboard()" class="w-full bg-white text-primary py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg shadow-white/20 hover:shadow-xl transition-all active:scale-[0.98]">
@@ -652,7 +689,7 @@ export function accountScreen(state) {
   const projectedPremium = Math.max(20, Math.round(currentPremium * (1 - loyaltyDiscount / 100)));
   const progressPct = Math.max(35, Math.min(92, score));
   return `
-<div class="min-h-full bg-[#f8faf9] flex flex-col pb-32">
+<div class="min-h-full bg-[#f8faf9] flex flex-col pb-6">
   <header class="bg-white sticky top-0 z-50 border-b border-outline-variant/10 shadow-sm">
     <div class="px-6 py-4 w-full flex items-center justify-between">
       <div class="flex items-center gap-3">

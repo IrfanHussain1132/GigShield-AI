@@ -3,7 +3,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, func
+from sqlalchemy import desc, func, or_
 from database import get_db
 import models
 import config
@@ -501,3 +501,232 @@ def list_workers(
         })
 
     return result
+
+
+# ═══════════════════════════════════════════
+# Phase 3 – Scale: Predictive Analytics
+# ═══════════════════════════════════════════
+
+@router.get("/admin/predictive-claims")
+async def predictive_claims(db: Session = Depends(get_db)):
+    """
+    Predict next week's claims using LSTM forecast + historical trigger patterns.
+    Returns per-zone predictions with confidence and risk factors.
+    """
+    now = utcnow()
+    from services import ml_service
+
+    zones_config = {
+        "Zone 1": {"city": "Central Chennai", "lat": 13.0827, "lon": 80.2707},
+        "Zone 2": {"city": "Hyderabad", "lat": 17.3850, "lon": 78.4867},
+        "Zone 3": {"city": "Delhi", "lat": 28.6139, "lon": 77.2090},
+        "Zone 4": {"city": "South Chennai", "lat": 13.0125, "lon": 80.2241},
+        "Zone 5": {"city": "Mumbai", "lat": 19.0760, "lon": 72.8777},
+        "Zone 6": {"city": "Bengaluru", "lat": 12.9716, "lon": 77.5946},
+    }
+
+    zone_predictions = []
+    total_predicted_liability = 0
+
+    for zone_name, zone_info in zones_config.items():
+        # Historical claims in last 4 weeks for this zone
+        four_weeks_ago = now - timedelta(days=28)
+        last_week = now - timedelta(days=7)
+
+        hist_claims = (
+            db.query(func.count(models.Payout.id))
+            .join(models.TriggerEvent, models.Payout.trigger_event_id == models.TriggerEvent.id)
+            .filter(
+                models.TriggerEvent.zone == zone_name,
+                models.Payout.date >= four_weeks_ago,
+            )
+            .scalar()
+        ) or 0
+
+        recent_claims = (
+            db.query(func.count(models.Payout.id))
+            .join(models.TriggerEvent, models.Payout.trigger_event_id == models.TriggerEvent.id)
+            .filter(
+                models.TriggerEvent.zone == zone_name,
+                models.Payout.date >= last_week,
+            )
+            .scalar()
+        ) or 0
+
+        # Get 72hr forecast for risk estimation
+        from services.trigger_service import get_live_zone_data
+        live_data = get_live_zone_data(zone_name)
+        forecast_summary = ml_service.get_forecast_summary(zone_name, live_data)
+
+        # Predict next week based on trend + forecast
+        weekly_avg = hist_claims / 4 if hist_claims > 0 else 0
+        trend_factor = (recent_claims / max(weekly_avg, 0.5)) if weekly_avg > 0 else 1.0
+        forecast_factor = 1 + (forecast_summary["max_risk_72h"] / 100) * 0.5
+
+        predicted_claims = max(0, round(weekly_avg * trend_factor * forecast_factor))
+        avg_payout = 408  # ₹408 per claim average
+        predicted_liability = predicted_claims * avg_payout
+
+        # Identify risk factors
+        risk_factors = []
+        if forecast_summary["red_hours"] > 5:
+            risk_factors.append(f"{forecast_summary['red_hours']} RED hours in 72h forecast")
+        if forecast_summary["max_risk_6h"] >= 70:
+            risk_factors.append("High imminent 6h risk")
+        if trend_factor > 1.5:
+            risk_factors.append("Claims trending up vs 4-week average")
+        if live_data.get("rain_mm", 0) > 30:
+            risk_factors.append(f"Current rainfall: {live_data.get('rain_mm', 0)}mm")
+        if live_data.get("aqi", 0) > 200:
+            risk_factors.append(f"Elevated AQI: {live_data.get('aqi', 0)}")
+        if not risk_factors:
+            risk_factors.append("Normal conditions expected")
+
+        zone_predictions.append({
+            "zone": zone_name,
+            "city": zone_info["city"],
+            "predicted_claims": predicted_claims,
+            "predicted_liability": predicted_liability,
+            "historical_weekly_avg": round(weekly_avg, 1),
+            "last_week_claims": recent_claims,
+            "trend_factor": round(trend_factor, 2),
+            "forecast_risk_72h": forecast_summary["max_risk_72h"],
+            "risk_factors": risk_factors,
+            "confidence": min(95, 60 + hist_claims * 2),
+        })
+        total_predicted_liability += predicted_liability
+
+    # Sort by predicted liability descending
+    zone_predictions.sort(key=lambda z: z["predicted_liability"], reverse=True)
+
+    return {
+        "zones": zone_predictions,
+        "total_predicted_liability": total_predicted_liability,
+        "total_predicted_claims": sum(z["predicted_claims"] for z in zone_predictions),
+        "generated_at": now.isoformat(),
+        "confidence": "high" if total_predicted_liability > 0 else "moderate",
+    }
+
+
+@router.get("/admin/claims-distribution")
+async def claims_distribution(days: int = 30, db: Session = Depends(get_db)):
+    """
+    Claims distribution analytics — breakdown by trigger type, zone, time-of-day.
+    """
+    now = utcnow()
+    start = now - timedelta(days=days)
+
+    payouts = (
+        db.query(models.Payout)
+        .filter(models.Payout.date >= start)
+        .all()
+    )
+
+    # By trigger type
+    type_dist = {}
+    zone_dist = {}
+    hour_dist = {h: 0 for h in range(24)}
+    fraud_by_type = {}
+
+    for p in payouts:
+        ptype = p.type or "Unknown"
+        type_dist[ptype] = type_dist.get(ptype, 0) + 1
+
+        # Get zone from trigger event
+        if p.trigger_event_id:
+            te = db.query(models.TriggerEvent).filter(models.TriggerEvent.id == p.trigger_event_id).first()
+            if te:
+                zone_dist[te.zone] = zone_dist.get(te.zone, 0) + 1
+
+        # Time of day
+        if p.date:
+            hour_dist[p.date.hour] = hour_dist.get(p.date.hour, 0) + 1
+
+        # Fraud scores by type
+        if ptype not in fraud_by_type:
+            fraud_by_type[ptype] = []
+        fraud_by_type[ptype].append(p.fraud_score or 0)
+
+    # Calculate averages
+    avg_fraud_by_type = {
+        t: round(sum(scores) / max(len(scores), 1), 3)
+        for t, scores in fraud_by_type.items()
+    }
+
+    return {
+        "period_days": days,
+        "total_claims": len(payouts),
+        "by_trigger_type": [
+            {"type": t, "count": c, "avg_fraud_score": avg_fraud_by_type.get(t, 0)}
+            for t, c in sorted(type_dist.items(), key=lambda x: x[1], reverse=True)
+        ],
+        "by_zone": [
+            {"zone": z, "count": c}
+            for z, c in sorted(zone_dist.items(), key=lambda x: x[1], reverse=True)
+        ],
+        "by_hour": [
+            {"hour": h, "count": c} for h, c in sorted(hour_dist.items())
+        ],
+    }
+
+
+@router.get("/admin/loss-ratio-trend")
+async def loss_ratio_trend(days: int = 30, db: Session = Depends(get_db)):
+    """
+    30-day rolling loss ratio with weekly comparison.
+    Loss Ratio = total payouts / total premiums collected.
+    """
+    now = utcnow()
+
+    # Weekly loss ratios for the past N days
+    weekly_data = []
+    for week_offset in range(days // 7):
+        week_end = now - timedelta(days=week_offset * 7)
+        week_start = week_end - timedelta(days=7)
+
+        week_payouts = (
+            db.query(func.sum(models.Payout.amount_paise))
+            .filter(
+                models.Payout.date >= week_start,
+                models.Payout.date < week_end,
+                models.Payout.status == "Credited",
+            )
+            .scalar()
+        ) or 0
+
+        week_premiums = (
+            db.query(func.sum(models.Policy.premium_amount_paise))
+            .filter(
+                models.Policy.start_date <= week_end,
+                or_(models.Policy.end_date >= week_start, models.Policy.end_date == None),
+            )
+            .scalar()
+        ) or 0
+
+        lr = round((week_payouts / max(week_premiums, 1)) * 100, 1)
+
+        weekly_data.append({
+            "week_label": f"W-{week_offset}" if week_offset > 0 else "This Week",
+            "week_start": week_start.strftime("%Y-%m-%d"),
+            "week_end": week_end.strftime("%Y-%m-%d"),
+            "payouts_total": week_payouts / 100,
+            "premiums_total": week_premiums / 100,
+            "loss_ratio": lr,
+        })
+
+    weekly_data.reverse()
+
+    # Current vs last week
+    current_lr = weekly_data[-1]["loss_ratio"] if weekly_data else 0
+    prev_lr = weekly_data[-2]["loss_ratio"] if len(weekly_data) >= 2 else 0
+    wow_delta = round(current_lr - prev_lr, 1)
+
+    return {
+        "current_loss_ratio": current_lr,
+        "previous_week_loss_ratio": prev_lr,
+        "wow_delta": wow_delta,
+        "target": 65.0,
+        "status": "healthy" if current_lr <= 65 else "warning" if current_lr <= 80 else "critical",
+        "weekly_trend": weekly_data,
+    }
+

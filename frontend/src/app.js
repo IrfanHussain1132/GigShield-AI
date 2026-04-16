@@ -11,6 +11,8 @@ import { t, supportedLanguages } from './utils/i18n.js';
 
 const ONBOARDING_SLIDE_COUNT = 3;
 let appBootstrapped = false;
+let _navInFlight = false; // Prevent double-navigation
+let _lastNavTime = 0;
 
 function createIdempotencyKey(prefix = 'idem') {
   const random = Math.random().toString(36).slice(2, 10);
@@ -20,14 +22,15 @@ function createIdempotencyKey(prefix = 'idem') {
 // --- Router ---
 const router = {
   navigate(screen) {
+    // Debounce: prevent rapid re-navigations that cause lag
+    const now = Date.now();
+    if (screen === state.screen && (now - _lastNavTime) < 300) return;
+    _lastNavTime = now;
     state.screen = screen;
     const container = document.getElementById('screen-container');
     if (!container) return;
     const renderFn = screens[screen];
     if (!renderFn) { console.error('Unknown screen:', screen); return; }
-    
-    container.style.willChange = 'opacity, transform';
-    container.classList.remove('screen-enter');
     
     // Apply font-family and lang attribute
     const currentLang = supportedLanguages.find(l => l.code === (state.language || 'en'));
@@ -37,10 +40,10 @@ const router = {
     container.innerHTML = renderFn(state);
 
     requestAnimationFrame(() => {
+      container.classList.remove('screen-enter');
+      void container.offsetWidth; // force reflow
       container.classList.add('screen-enter');
       container.scrollTop = 0;
-      // Reset hint after animation
-      setTimeout(() => { container.style.willChange = 'auto'; }, 500);
     });
 
     const navScreens = ['home','coverage','payouts','account','live_zone'];
@@ -298,6 +301,8 @@ const actions = {
   },
 
   async goToDashboard() {
+    if (_navInFlight) return;
+    _navInFlight = true;
     const pid = state.partnerId || 'SW-982341';
     const zone = state.user.zone || 'Zone 4';
     try {
@@ -313,6 +318,7 @@ const actions = {
       state.forecastAlert = alert;
       router.navigate('home');
     } catch (e) { console.warn('Dashboard fetch issue'); router.navigate('home'); }
+    finally { _navInFlight = false; }
   },
 
   async loadZoneDetails() {
@@ -387,7 +393,32 @@ const actions = {
     router.navigate('home');
   },
 
-  simulateTrigger() {
+  async simulateTrigger() {
+    // Phase 3 – Scale: Animated payout simulation using backend lifecycle
+    try {
+      const res = await api('/simulate/trigger-payout', { method: 'POST', throwOnError: true }, state);
+      if (res?.success) {
+        state.latestPayout = {
+          amount: res.amount_rupees,
+          type: res.trigger_type,
+          status: res.status,
+          signal: `AI-verified ${res.trigger_type} disruption in ${res.zone}`,
+          upi_ref: res.upi_ref,
+          time: 'Now',
+          date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+          zone: res.zone,
+          city: state.user.city || 'South Chennai',
+          fraud_score: res.fraud_score,
+          processing_ms: res.total_processing_ms,
+          simulation_steps: res.steps,
+        };
+        router.navigate('payout_celebration');
+        return;
+      }
+    } catch (e) {
+      console.warn('Simulation API fallback:', e.message);
+    }
+    // Fallback to local simulation if API fails
     const amount = state.tier === 'premium' ? 510 : 408;
     state.latestPayout = {
       amount,
@@ -419,7 +450,13 @@ const actions = {
     state.chatHistory.push({ role: 'user', content: msg });
     input.value = '';
     state.chatLoading = true;
-    router.navigate('account'); // Refresh
+    // Update chat section only, not full page re-render
+    const chatContainer = document.getElementById('chat-messages');
+    if (chatContainer) {
+      chatContainer.innerHTML += `<div class="bg-primary/10 text-on-surface text-sm p-3 rounded-2xl rounded-br-sm ml-auto max-w-[80%]">${msg}</div>`;
+      chatContainer.innerHTML += `<div class="bg-surface-container-high text-on-surface-variant text-sm p-3 rounded-2xl rounded-bl-sm max-w-[80%] animate-pulse">Thinking...</div>`;
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
     try {
       const res = await api('/support/chat', { method: 'POST', body: JSON.stringify({ message: msg, history: state.chatHistory.slice(0, -1) }) }, state);
       state.chatHistory.push({ role: 'assistant', content: res?.reply || "Sorry bhai, something went wrong." });
