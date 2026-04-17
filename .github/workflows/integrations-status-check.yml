@@ -1,0 +1,39 @@
+name: Integrations Status Check
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - contributions/bhima
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: securesync-integrations-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integrations-status-shape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Validate integrations status response shape
+        run: |
+          PYTHONPATH="${{ github.workspace }}/backend" pytest -q backend/tests/test_integrations_status_ci.py

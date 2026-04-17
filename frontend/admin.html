@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SecureSync AI — Admin</title>
+  <meta name="description" content="Admin command center for SecureSync AI parametric insurance platform.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23005e52'/%3E%3Cpath d='M20 34l8 8 16-20' fill='none' stroke='%23ffffff' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap">
+  <style>
+    /* ══════════════════════════════════════
+       EXACT SecureSync Design System Tokens
+       ══════════════════════════════════════ */
+    :root {
+      --color-background:               #fcf9f8;
+      --color-surface:                  #fcf9f8;
+      --color-surface-container:        #f0eded;
+      --color-surface-container-low:    #f6f3f2;
+      --color-surface-container-high:   #eae7e7;
+      --color-surface-container-highest:#e5e2e1;
+      --color-surface-container-lowest: #ffffff;
+      --color-on-background:            #1b1c1c;
+      --color-on-surface:               #1b1c1c;
+      --color-on-surface-variant:       #3e4946;
+      --color-primary:                  #005e52;
+      --color-primary-container:        #1f786a;
+      --color-on-primary:               #ffffff;
+      --color-primary-fixed:            #a0f2e1;
+      --color-secondary:                #7e5700;
+      --color-secondary-container:      #feb300;
+      --color-on-secondary-container:   #6a4800;
+      --color-tertiary:                 #086019;
+      --color-tertiary-container:       #2b7a2f;
+      --color-error:                    #ba1a1a;
+      --color-error-container:          #ffdad6;
+      --color-outline:                  #6e7a76;
+      --color-outline-variant:          #bdc9c5;
+
+      --font-headline: 'Plus Jakarta Sans', sans-serif;
+      --font-body:     'Inter', 'Noto Sans', sans-serif;
+
+      --radius-sm:  0.75rem;
+      --radius-lg:  1.2rem;
+      --radius-xl:  1.5rem;
+      --radius-2xl: 2rem;
+
+      --shadow-soft:     0 4px 20px rgba(0,0,0,0.04);
+      --shadow-elevated: 0 10px 30px rgba(0,94,82,0.12);
+      --nav-height: 88px;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box; margin: 0; padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Body behaves identically to index.html */
+    body {
+      background-color: #f0f2f1;
+      color: var(--color-on-background);
+      font-family: var(--font-body);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* 430 px centred container — exact match to .app-container */
+    .app-container {
+      width: min(100vw, 430px);
+      height: 100vh;
+      height: 100dvh;
+      margin: 0 auto;
+      background: var(--color-background);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 100px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    /* Scrollable content area */
+    #screen-container {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      overflow-x: hidden;
+      position: relative;
+      touch-action: pan-y;
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+    }
+
+    /* ── Top Shell / App Bar ── */
+    .top-shell {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(252,249,248,0.98);
+      border-bottom: 1px solid rgba(255,255,255,0.4);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-row { display: flex; align-items: center; gap: 10px; }
+
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--color-primary), #007a6b);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,94,82,0.25);
+      flex-shrink: 0;
+    }
+    .logo-icon .material-symbols-outlined { font-size: 20px; color: white; }
+
+    .brand-name {
+      font-family: var(--font-headline);
+      font-weight: 800; font-size: 17px;
+      letter-spacing: -0.4px;
+      color: var(--color-on-background);
+    }
+    .admin-badge {
+      font-size: 9px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 1.5px; color: var(--color-on-primary);
+      background: var(--color-primary); padding: 2px 7px;
+      border-radius: 20px;
+    }
+
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .live-pill {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(0,94,82,0.07);
+      border: 1px solid rgba(0,94,82,0.15);
+      border-radius: 20px; padding: 4px 10px;
+    }
+    .pulse-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--color-primary);
+      box-shadow: 0 0 6px var(--color-primary);
+      animation: pulse-anim 2s infinite;
+    }
+    @keyframes pulse-anim {
+      0%,100% { transform:scale(1); opacity:1; }
+      50%      { transform:scale(1.6); opacity:0.4; }
+    }
+    .live-text { font-size: 10px; font-weight: 800; color: var(--color-primary); letter-spacing: 0.5px; }
+    #live-time { font-size: 10px; font-weight: 600; color: var(--color-outline); }
+
+    .back-btn {
+      display: flex; align-items: center; gap: 4px;
+      color: var(--color-primary); font-size: 12px; font-weight: 700;
+      text-decoration: none; cursor: pointer;
+      padding: 6px 10px; border-radius: 10px;
+      background: rgba(0,94,82,0.06);
+      transition: background 0.2s;
+    }
+    .back-btn:hover { background: rgba(0,94,82,0.12); }
+    .back-btn .material-symbols-outlined { font-size: 16px; }
+
+    /* ── Sections ── */
+    .section { display: none; padding: 20px 16px 8px; }
+    .section.active { display: block; animation: fadeUp 0.35s cubic-bezier(0.2,0.8,0.2,1) both; }
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(10px) scale(0.98); }
+      to   { opacity:1; transform:translateY(0) scale(1); }
+    }
+
+    /* ── Heading ── */
+    .sec-title {
+      font-family: var(--font-headline);
+      font-size: 1.45rem; font-weight: 800; letter-spacing: -0.04em;
+      color: var(--color-on-background); margin-bottom: 2px;
+    }
+    .sec-desc { font-size: 13px; color: var(--color-outline); margin-bottom: 18px; }
+
+    /* ── Cards — exact match to style.css .card ── */
+    .card {
+      background: var(--color-surface-container-lowest);
+      border-radius: var(--radius-xl);
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid rgba(0,0,0,0.02);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:active { transform: scale(0.99); }
+
+    .card-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .card-hdr-title {
+      font-family: var(--font-headline);
+      font-size: 15px; font-weight: 700;
+      color: var(--color-on-surface);
+    }
+
+    /* ── Badges ── */
+    .badge {
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 10px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .badge-success { background: rgba(8,96,25,0.1);  color: var(--color-tertiary); }
+    .badge-warning { background: rgba(126,87,0,0.1); color: var(--color-secondary); }
+    .badge-danger  { background: rgba(186,26,26,0.1);color: var(--color-error); }
+    .badge-primary { background: rgba(0,94,82,0.1);  color: var(--color-primary); }
+
+    /* ── KPI 2-col grid ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2,1fr);
+      gap: 12px; margin-bottom: 14px;
+    }
+    .kpi-card {
+      background: var(--color-surface-container-lowest);
+      border: 1px solid rgba(0,0,0,0.03);
+      border-radius: var(--radius-lg);
+      padding: 14px; display: flex; flex-direction: column; gap: 6px;
+      box-shadow: var(--shadow-soft);
+      transition: transform 0.2s ease;
+    }
+    .kpi-card:hover { transform: translateY(-2px); }
+    .kpi-icon {
+      width: 38px; height: 38px; border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .kpi-icon .material-symbols-outlined { font-size: 20px; }
+    .kpi-label {
+      font-size: 9px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 1.2px; color: var(--color-outline);
+    }
+    .kpi-value {
+      font-family: var(--font-headline);
+      font-size: 24px; font-weight: 800; letter-spacing: -0.5px;
+      color: var(--color-on-background);
+    }
+    .kpi-sub { font-size: 11px; color: var(--color-outline); display:flex; align-items:center; gap:3px; }
+    .kpi-sub .material-symbols-outlined { font-size:13px; }
+
+    /* ── Progress Bar ── */
+    .prog-bar {
+      height: 6px; border-radius: 10px;
+      background: var(--color-surface-container-high); overflow: hidden;
+      margin-bottom: 14px;
+    }
+    .prog-fill {
+      height: 100%; border-radius: 10px;
+      transition: width 1.1s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ── Sparkbar (trend chart) ── */
+    .trend-bars {
+      display: flex; align-items: flex-end; gap: 5px; height: 56px;
+    }
+    .t-bar { flex:1; border-radius: 4px 4px 0 0; min-height: 4px; }
+
+    /* ── Partner row card ── */
+    .partner-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--color-surface-container);
+    }
+    .partner-row:last-child { border-bottom: none; }
+
+    .avatar {
+      width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;
+      background: linear-gradient(135deg, rgba(0,94,82,0.15), rgba(0,94,82,0.08));
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-headline);
+      font-weight: 800; font-size: 15px;
+      color: var(--color-primary);
+    }
+    .partner-info { flex: 1; min-width: 0; }
+    .partner-name {
+      font-weight: 700; font-size: 14px; color: var(--color-on-surface);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .partner-meta { font-size: 11px; color: var(--color-outline); }
+    .partner-amount {
+      font-family: var(--font-headline);
+      font-weight: 800; font-size: 15px; color: var(--color-primary);
+      white-space: nowrap;
+    }
+
+    /* ── Zone row ── */
+    .zone-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px;
+      background: var(--color-surface-container-low);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+    }
+    .zone-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink:0; }
+    .zone-name-txt { font-weight: 700; font-size: 13px; flex:1; color: var(--color-on-surface); }
+    .zone-stat { font-size: 11px; color: var(--color-outline); }
+
+    /* ── Fleet table ── */
+    .fleet-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 0; border-bottom: 1px solid var(--color-surface-container);
+    }
+    .fleet-row:last-child { border-bottom: none; }
+    .fleet-info { flex:1; min-width:0; }
+    .fleet-name { font-weight:700; font-size:13px; color:var(--color-on-surface); }
+    .fleet-meta { font-size:10px; color:var(--color-outline); }
+    .fleet-score {
+      font-family: var(--font-headline);
+      font-weight: 800; font-size: 15px;
+    }
+
+    /* ── Review actions ── */
+    .review-item {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--color-surface-container);
+    }
+    .review-item:last-child { border-bottom: none; }
+    .review-name { font-weight:700; font-size:14px; color:var(--color-on-surface); }
+    .review-sub  { font-size:11px; color:var(--color-outline); margin-bottom:10px; }
+    .btn-row { display:flex; gap:8px; }
+
+    .btn-approve, .btn-reject {
+      padding: 7px 16px; border-radius: var(--radius-sm);
+      font-family: var(--font-headline);
+      font-size: 11px; font-weight: 800; border: none; cursor: pointer;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      transition: transform 0.15s, opacity 0.15s;
+    }
+    .btn-approve {
+      background: var(--color-primary); color: var(--color-on-primary);
+      box-shadow: 0 4px 12px rgba(0,94,82,0.2);
+    }
+    .btn-reject {
+      background: var(--color-error-container); color: var(--color-error);
+    }
+    .btn-approve:hover, .btn-reject:hover { opacity: 0.9; transform: scale(1.03); }
+    .btn-approve:active, .btn-reject:active { transform: scale(0.95); }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center; padding: 36px 16px;
+      border: 1px dashed var(--color-outline-variant);
+      border-radius: var(--radius-lg);
+    }
+    .empty-state .material-symbols-outlined { font-size:36px; opacity:0.2; display:block; margin-bottom:10px; }
+    .empty-state p { font-size:13px; color: var(--color-outline); }
+
+    /* ── Bottom Nav — exact match to .nav-bottom ── */
+    .nav-bottom {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: calc(72px + env(safe-area-inset-bottom));
+      background: rgba(255,255,255,0.98);
+      display: flex; justify-content: space-around; align-items: center;
+      padding-bottom: env(safe-area-inset-bottom);
+      border-top: 1px solid rgba(0,0,0,0.04);
+      z-index: 1000;
+      box-shadow: 0 -8px 30px rgba(0,0,0,0.03);
+      border-radius: 24px 24px 0 0;
+      pointer-events: auto;
+    }
+
+    .nav-item {
+      position: relative; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 8px 0; flex: 1;
+      color: var(--color-on-surface-variant);
+      transition: all 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+      cursor: pointer; opacity: 0.6; background: none; border: none;
+    }
+    .nav-item.active { color: var(--color-primary); opacity: 1; transform: translateY(-4px); }
+    .nav-item::after {
+      content: ''; position: absolute; bottom: 4px; left: 50%;
+      width: 0; height: 3px;
+      background: var(--color-primary); border-radius: 10px;
+      transform: translateX(-50%); transition: width 0.3s;
+    }
+    .nav-item.active::after { width: 14px; }
+    .nav-item .material-symbols-outlined { font-size: 26px; margin-bottom: 2px; }
+    .nav-item.active .material-symbols-outlined {
+      font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+      filter: drop-shadow(0 2px 8px rgba(0,94,82,0.2));
+    }
+    .nav-item span:last-child {
+      font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+
+    /* Scrollbar */
+    #screen-container::-webkit-scrollbar { width: 4px; }
+    #screen-container::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius:10px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+
+    <!-- ── App Bar ── -->
+    <header class="top-shell">
+      <div class="brand-row">
+        <div class="logo-icon">
+          <span class="material-symbols-outlined">shield</span>
+        </div>
+        <span class="brand-name">SecureSync</span>
+        <span class="admin-badge">Admin</span>
+      </div>
+      <div class="header-right">
+        <div class="live-pill">
+          <div class="pulse-dot"></div>
+          <span class="live-text">LIVE</span>
+          <span id="live-time"></span>
+        </div>
+        <a href="/" class="back-btn" title="Back to app">
+          <span class="material-symbols-outlined">logout</span>
+          Exit
+        </a>
+      </div>
+    </header>
+
+    <!-- ── Scrollable Sections ── -->
+    <div id="screen-container" style="padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));">
+
+      <!-- ════ Overview ════ -->
+      <div class="section active" id="sec-overview">
+        <p class="sec-title">Neural Overview</p>
+        <p class="sec-desc">Real-time parametric coverage telemetry</p>
+
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(0,94,82,0.1);">
+              <span class="material-symbols-outlined" style="color:var(--color-primary);">shield</span>
+            </div>
+            <p class="kpi-label">Active Policies</p>
+            <p class="kpi-value" id="kpi-policies">—</p>
+            <p class="kpi-sub">
+              <span class="material-symbols-outlined" style="color:var(--color-tertiary);">trending_up</span>
+              <span id="kpi-workers">—</span> partners
+            </p>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(126,87,0,0.1);">
+              <span class="material-symbols-outlined" style="color:var(--color-secondary);">payments</span>
+            </div>
+            <p class="kpi-label">Month Liability</p>
+            <p class="kpi-value">₹<span id="kpi-payouts">—</span></p>
+            <p class="kpi-sub"><span id="kpi-pcount">0</span> claims</p>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" id="lr-icon" style="background:rgba(8,96,25,0.1);">
+              <span class="material-symbols-outlined" id="lr-sym" style="color:var(--color-tertiary);">query_stats</span>
+            </div>
+            <p class="kpi-label">Loss Ratio</p>
+            <p class="kpi-value" id="kpi-lr">—</p>
+            <p class="kpi-sub">Target ≤65%</p>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(59,130,246,0.1);">
+              <span class="material-symbols-outlined" style="color:#3b82f6;">bolt</span>
+            </div>
+            <p class="kpi-label">Payout Speed</p>
+            <p class="kpi-value"><span id="kpi-speed">—</span><span style="font-size:11px;opacity:0.5;">ms</span></p>
+            <p class="kpi-sub" style="color:var(--color-tertiary);">Instant Credit</p>
+          </div>
+        </div>
+
+        <!-- Trend chart -->
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-hdr-title">Loss Ratio Trend</span>
+            <span class="badge badge-primary">4-Week</span>
+          </div>
+          <div class="trend-bars" id="lr-trend"></div>
+          <div style="display:flex;justify-content:space-between;margin-top:6px;">
+            <span style="font-size:10px;color:var(--color-outline);" id="trend-start"></span>
+            <span style="font-size:10px;color:var(--color-outline);">Today</span>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;">
+            <span style="font-size:10px;color:var(--color-outline);display:flex;align-items:center;gap:4px;">
+              <span style="width:9px;height:9px;border-radius:3px;background:var(--color-tertiary);display:inline-block;"></span>≤65%
+            </span>
+            <span style="font-size:10px;color:var(--color-outline);display:flex;align-items:center;gap:4px;">
+              <span style="width:9px;height:9px;border-radius:3px;background:var(--color-secondary);display:inline-block;"></span>66–80%
+            </span>
+            <span style="font-size:10px;color:var(--color-outline);display:flex;align-items:center;gap:4px;">
+              <span style="width:9px;height:9px;border-radius:3px;background:var(--color-error);display:inline-block;"></span>&gt;80%
+            </span>
+          </div>
+        </div>
+
+        <!-- Zone heatmap -->
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-hdr-title">Zone Heatmap</span>
+            <span class="badge badge-primary">Live</span>
+          </div>
+          <div id="zone-mini"></div>
+        </div>
+
+        <!-- Risk engine -->
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-hdr-title">Risk Engine</span>
+            <span class="badge badge-primary">Auto</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;color:var(--color-on-surface-variant);">Auto-verified</span>
+            <span style="font-size:13px;font-weight:700;color:var(--color-tertiary);" id="f-auto">—</span>
+          </div>
+          <div class="prog-bar"><div class="prog-fill" id="f-auto-bar" style="background:var(--color-tertiary);width:0%;"></div></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;color:var(--color-on-surface-variant);">Manually Held</span>
+            <span style="font-size:13px;font-weight:700;color:var(--color-error);" id="f-hard">—</span>
+          </div>
+          <div class="prog-bar" style="margin-bottom:0;"><div class="prog-fill" id="f-hard-bar" style="background:var(--color-error);width:0%;"></div></div>
+          <div style="margin-top:14px;padding:10px 12px;background:rgba(0,94,82,0.05);border-radius:10px;border:1px dashed rgba(0,94,82,0.2);display:flex;align-items:center;gap:8px;">
+            <span class="material-symbols-outlined" style="color:var(--color-primary);font-size:18px;">psychology</span>
+            <span style="font-size:12px;color:var(--color-on-surface-variant);">Isolation Forest Engine Active</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ Payouts — ALL real mock users ════ -->
+      <div class="section" id="sec-payouts">
+        <p class="sec-title">Payout Recipients</p>
+        <p class="sec-desc">All partners who received payments</p>
+
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-hdr-title">Transactions</span>
+            <span class="badge badge-warning" id="payout-badge">16 Records</span>
+          </div>
+          <div id="payout-list"></div>
+        </div>
+      </div>
+
+      <!-- ════ Review Queue ════ -->
+      <div class="section" id="sec-review">
+        <p class="sec-title">Review Queue</p>
+        <p class="sec-desc">Manual intervention for flagged claims</p>
+
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-hdr-title">Pending Actions</span>
+            <span class="badge badge-warning" id="review-count">3 Pending</span>
+          </div>
+          <div id="review-list"></div>
+        </div>
+      </div>
+
+      <!-- ════ Analytics ════ -->
+      <div class="section" id="sec-analytics">
+        <p class="sec-title">Claims Analytics</p>
+        <p class="sec-desc">30-day breakdown &amp; predictions</p>
+
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(126,87,0,0.1);">
+              <span class="material-symbols-outlined" style="color:var(--color-secondary);">receipt_long</span>
+            </div>
+            <p class="kpi-label">Predicted Claims</p>
+            <p class="kpi-value">142</p>
+            <p class="kpi-sub">Next 7 days</p>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(186,26,26,0.1);">
+              <span class="material-symbols-outlined" style="color:var(--color-error);">account_balance_wallet</span>
+            </div>
+            <p class="kpi-label">Predicted Liability</p>
+            <p class="kpi-value">₹57.9K</p>
+            <p class="kpi-sub">Est. payout</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hdr"><span class="card-hdr-title">By Trigger Type</span></div>
+          <div id="by-trigger"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-hdr"><span class="card-hdr-title">By Zone</span></div>
+          <div id="by-zone"></div>
+        </div>
+      </div>
+
+      <!-- ════ Fleet — same real users ════ -->
+      <div class="section" id="sec-fleet">
+        <p class="sec-title">Fleet Manager</p>
+        <p class="sec-desc">All partner accounts &amp; policy status</p>
+
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-hdr-title">Active Partners</span>
+            <span class="badge badge-primary" id="fleet-count">16</span>
+          </div>
+          <div id="fleet-list"></div>
+        </div>
+      </div>
+
+    </div><!-- end screen-container -->
+
+    <!-- ── Bottom Nav — exact .nav-bottom style ── -->
+    <nav class="nav-bottom">
+      <button class="nav-item active" id="nav-overview" onclick="showSection('overview')">
+        <span class="material-symbols-outlined">dashboard</span>
+        <span>Overview</span>
+      </button>
+      <button class="nav-item" id="nav-payouts" onclick="showSection('payouts')">
+        <span class="material-symbols-outlined">payments</span>
+        <span>Payouts</span>
+      </button>
+      <button class="nav-item" id="nav-review" onclick="showSection('review')">
+        <span class="material-symbols-outlined">fact_check</span>
+        <span>Review</span>
+      </button>
+      <button class="nav-item" id="nav-analytics" onclick="showSection('analytics')">
+        <span class="material-symbols-outlined">pie_chart</span>
+        <span>Analytics</span>
+      </button>
+      <button class="nav-item" id="nav-fleet" onclick="showSection('fleet')">
+        <span class="material-symbols-outlined">group</span>
+        <span>Fleet</span>
+      </button>
+    </nav>
+
+  </div><!-- end app-container -->
+
+<script>
+/* ─── Real MOCK_PARTNERS from seed_data.py ─── */
+const MOCK_PARTNERS = [
+  { id:"SW-982341", name:"Rajan Kumar",        platform:"swiggy", zone:"Zone 4", city:"South Chennai",   score:92, hourly_rate:102, weekly_income:6120,  tenure_months:36 },
+  { id:"ZM-112233", name:"Suresh Babu",         platform:"zomato", zone:"Zone 1", city:"Central Chennai",  score:78, hourly_rate:98,  weekly_income:5880,  tenure_months:20 },
+  { id:"SW-223344", name:"Arun Kumar",           platform:"swiggy", zone:"Zone 4", city:"South Chennai",   score:85, hourly_rate:100, weekly_income:6000,  tenure_months:26 },
+  { id:"ZM-998877", name:"Bala Subramanian",    platform:"zomato", zone:"Zone 1", city:"Central Chennai",  score:96, hourly_rate:115, weekly_income:6900,  tenure_months:45 },
+  { id:"ZM-445521", name:"Amit Verma",          platform:"zomato", zone:"Zone 2", city:"Hyderabad",        score:85, hourly_rate:100, weekly_income:6000,  tenure_months:26 },
+  { id:"SW-667788", name:"Priya Reddy",         platform:"swiggy", zone:"Zone 2", city:"Hyderabad",        score:88, hourly_rate:105, weekly_income:6300,  tenure_months:30 },
+  { id:"SW-776655", name:"Rahul Rao",           platform:"swiggy", zone:"Zone 2", city:"Hyderabad",        score:74, hourly_rate:92,  weekly_income:5520,  tenure_months:15 },
+  { id:"SW-334455", name:"Vikram Singh",        platform:"swiggy", zone:"Zone 3", city:"Delhi",            score:94, hourly_rate:110, weekly_income:6600,  tenure_months:46 },
+  { id:"ZM-556677", name:"Rakesh Sharma",       platform:"zomato", zone:"Zone 3", city:"Delhi",            score:72, hourly_rate:95,  weekly_income:5700,  tenure_months:13 },
+  { id:"ZM-123456", name:"Sandeep Kumar",       platform:"zomato", zone:"Zone 3", city:"Delhi",            score:89, hourly_rate:105, weekly_income:6300,  tenure_months:31 },
+  { id:"SW-889900", name:"Deepak Patil",        platform:"swiggy", zone:"Zone 5", city:"Mumbai",           score:90, hourly_rate:108, weekly_income:6480,  tenure_months:31 },
+  { id:"ZM-101112", name:"Farhan Sheikh",       platform:"zomato", zone:"Zone 5", city:"Mumbai",           score:80, hourly_rate:100, weekly_income:6000,  tenure_months:16 },
+  { id:"SW-556644", name:"Prasad More",         platform:"swiggy", zone:"Zone 5", city:"Mumbai",           score:84, hourly_rate:102, weekly_income:6120,  tenure_months:22 },
+  { id:"SW-131415", name:"Karthik Gowda",      platform:"swiggy", zone:"Zone 6", city:"Bengaluru",        score:83, hourly_rate:104, weekly_income:6240,  tenure_months:23 },
+  { id:"ZM-161718", name:"Naveen Kumar",        platform:"zomato", zone:"Zone 6", city:"Bengaluru",        score:87, hourly_rate:102, weekly_income:6120,  tenure_months:33 },
+  { id:"ZM-202122", name:"Vishnu Murthy",       platform:"zomato", zone:"Zone 6", city:"Bengaluru",        score:75, hourly_rate:94,  weekly_income:5640,  tenure_months:14 },
+  { id:"SW-303132", name:"Siddharth J",         platform:"swiggy", zone:"Zone 6", city:"Bengaluru",        score:97, hourly_rate:112, weekly_income:6720,  tenure_months:41 },
+];
+
+/* Trigger types matching seed_demo.py TRIGGER_CONFIGS */
+const TRIGGER_TYPES = ["Heavy Rain","Very Heavy Rain","AQI Danger","Heat Wave","Dense Fog","Gridlock"];
+const PAYOUT_HRS    = { "Heavy Rain":4, "Very Heavy Rain":6, "AQI Danger":5, "Heat Wave":4, "Dense Fog":4, "Gridlock":3 };
+
+/* Deterministic payout data for every partner (seeded like seed_demo) */
+function buildPayouts() {
+  const rows = [];
+  const triggers = [...TRIGGER_TYPES, ...TRIGGER_TYPES, ...TRIGGER_TYPES]; // wrap
+  const statuses  = ["Credited","Credited","Credited","Credited","Held","Processing"];
+  const dates = ["17 Apr 2026","17 Apr 2026","16 Apr 2026","16 Apr 2026","15 Apr 2026","15 Apr 2026","14 Apr 2026","13 Apr 2026"];
+
+  MOCK_PARTNERS.forEach((p, i) => {
+    const trigger = TRIGGER_TYPES[i % TRIGGER_TYPES.length];
+    const hrs     = PAYOUT_HRS[trigger];
+    const amount  = hrs * p.hourly_rate;
+    const status  = (i % 6 === 4) ? "Held" : (i % 6 === 5) ? "Processing" : "Credited";
+    const date    = dates[i % dates.length];
+    rows.push({ ...p, trigger, amount, status, date });
+  });
+  return rows;
+}
+
+/* Review queue (held / processing entries) */
+function buildReview(payouts) {
+  return payouts.filter(r => r.status !== "Credited");
+}
+
+/* ─── Helpers ─── */
+const inr = n => Number(n||0).toLocaleString('en-IN');
+function fmtK(n) { return n >= 1000 ? (n/1000).toFixed(1)+'K' : String(n); }
+
+function scoreColor(s) {
+  if (s >= 90) return 'var(--color-tertiary)';
+  if (s >= 80) return 'var(--color-primary)';
+  if (s >= 70) return 'var(--color-secondary)';
+  return 'var(--color-error)';
+}
+
+/* ─── Clock ─── */
+function tick() {
+  const t = new Date();
+  document.getElementById('live-time').textContent =
+    t.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+}
+setInterval(tick, 1000); tick();
+
+/* ─── Section switcher ─── */
+const SECS = ['overview','payouts','review','analytics','fleet'];
+function showSection(name) {
+  SECS.forEach(s => {
+    document.getElementById('sec-'+s).classList.toggle('active', s === name);
+    document.getElementById('nav-'+s).classList.toggle('active', s === name);
+  });
+  document.getElementById('screen-container').scrollTop = 0;
+}
+
+/* ─── Overview ─── */
+function renderOverview() {
+  document.getElementById('kpi-policies').textContent = '16';
+  document.getElementById('kpi-workers').textContent  = '16';
+  document.getElementById('kpi-payouts').textContent  = fmtK(PAYOUTS.reduce((s,p)=>s+p.amount,0));
+  document.getElementById('kpi-pcount').textContent   = PAYOUTS.filter(p=>p.status==='Credited').length;
+  document.getElementById('kpi-lr').textContent       = '58.4%';
+  document.getElementById('kpi-speed').textContent    = '118';
+  document.getElementById('f-auto').textContent       = '89%';
+  document.getElementById('f-hard').textContent       = '11%';
+
+  setTimeout(() => {
+    document.getElementById('f-auto-bar').style.width = '89%';
+    document.getElementById('f-hard-bar').style.width = '11%';
+  }, 300);
+
+  renderTrend();
+  renderZones();
+}
+
+function renderTrend() {
+  const vals   = [52.1, 61.4, 74.8, 58.4];
+  const max    = Math.max(...vals) * 1.15;
+  const colors = [
+    'var(--color-tertiary)','var(--color-tertiary)',
+    'var(--color-secondary)','var(--color-tertiary)'
+  ];
+  const now = new Date();
+  const startDate = new Date(now); startDate.setDate(now.getDate() - 21);
+  document.getElementById('trend-start').textContent =
+    startDate.toLocaleDateString('en-IN', { day:'2-digit', month:'short' });
+
+  document.getElementById('lr-trend').innerHTML = vals.map((v,i) =>
+    `<div class="t-bar" style="background:${colors[i]};height:${Math.round(v/max*100)}%;opacity:${0.5+i*0.17};" title="${v}%"></div>`
+  ).join('');
+}
+
+function renderZones() {
+  const zones = [
+    { name:'Zone 1 – Chennai Central', sev:'Low',    col:'var(--color-tertiary)',   claims:24 },
+    { name:'Zone 2 – Hyderabad',       sev:'Medium', col:'var(--color-secondary)',  claims:61 },
+    { name:'Zone 3 – Delhi',           sev:'High',   col:'var(--color-error)',      claims:93 },
+    { name:'Zone 4 – South Chennai',   sev:'Low',    col:'var(--color-tertiary)',   claims:18 },
+    { name:'Zone 5 – Mumbai',          sev:'Medium', col:'var(--color-secondary)',  claims:45 },
+    { name:'Zone 6 – Bengaluru',       sev:'Low',    col:'var(--color-tertiary)',   claims:31 },
+  ];
+  const badgeMap = { Low:'badge-success', Medium:'badge-warning', High:'badge-danger' };
+  document.getElementById('zone-mini').innerHTML = zones.map(z => `
+    <div class="zone-row">
+      <div class="zone-dot" style="background:${z.col};box-shadow:0 0 5px ${z.col};"></div>
+      <span class="zone-name-txt">${z.name}</span>
+      <span class="zone-stat">${z.claims} claims</span>
+      <span class="badge ${badgeMap[z.sev]}" style="margin-left:6px;">${z.sev}</span>
+    </div>
+  `).join('');
+}
+
+/* ─── Payouts ─── */
+function renderPayouts() {
+  document.getElementById('payout-badge').textContent = PAYOUTS.length + ' Records';
+  const statusBadge = s => s === 'Credited' ? 'badge-success' : s === 'Held' ? 'badge-warning' : 'badge-primary';
+
+  document.getElementById('payout-list').innerHTML = PAYOUTS.map(p => `
+    <div class="partner-row">
+      <div class="avatar">${p.name.charAt(0)}</div>
+      <div class="partner-info">
+        <div class="partner-name">${p.name}</div>
+        <div class="partner-meta">${p.id} · ${p.trigger} · ${p.date}</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="partner-amount">₹${inr(p.amount)}</div>
+        <span class="badge ${statusBadge(p.status)}" style="margin-top:3px;display:inline-block;">${p.status}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ─── Review Queue ─── */
+function renderReview() {
+  const held = buildReview(PAYOUTS);
+  document.getElementById('review-count').textContent = held.length + ' Pending';
+
+  if (!held.length) {
+    document.getElementById('review-list').innerHTML = `
+      <div class="empty-state">
+        <span class="material-symbols-outlined">checklist</span>
+        <p>Queue cleared — all payouts verified.</p>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('review-list').innerHTML = held.map((r, i) => `
+    <div class="review-item" id="rv-${i}">
+      <div class="review-name">${r.name}</div>
+      <div class="review-sub">${r.id} · ${r.trigger} · ₹${inr(r.amount)} · ${r.city}</div>
+      <div class="btn-row">
+        <button class="btn-approve" onclick="reviewAction(${i},'approve')">
+          <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;margin-right:4px;">check</span>Approve
+        </button>
+        <button class="btn-reject" onclick="reviewAction(${i},'reject')">
+          <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;margin-right:4px;">close</span>Reject
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function reviewAction(i, action) {
+  const el = document.getElementById('rv-' + i);
+  if (!el) return;
+  el.style.transition = 'all 0.35s ease';
+  el.style.opacity = '0'; el.style.height = el.offsetHeight + 'px';
+  setTimeout(() => { el.style.height = '0'; el.style.margin = '0'; el.style.padding = '0'; }, 50);
+  setTimeout(() => el.remove(), 400);
+}
+
+/* ─── Analytics ─── */
+function renderAnalytics() {
+  const triggers = [
+    { label:'Heavy Rain',     pct:42, col:'var(--color-primary)' },
+    { label:'AQI Danger',     pct:28, col:'var(--color-secondary)' },
+    { label:'Very Heavy Rain',pct:18, col:'var(--color-tertiary)' },
+    { label:'Dense Fog',      pct:8,  col:'#3b82f6' },
+    { label:'Heat Wave / Gridlock', pct:4, col:'var(--color-error)' },
+  ];
+  document.getElementById('by-trigger').innerHTML = triggers.map(t => `
+    <div style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+        <span style="font-size:12px;color:var(--color-on-surface-variant);">${t.label}</span>
+        <span style="font-size:12px;font-weight:700;color:var(--color-on-surface);">${t.pct}%</span>
+      </div>
+      <div class="prog-bar" style="margin-bottom:0;">
+        <div class="prog-fill" style="background:${t.col};" data-w="${t.pct}"></div>
+      </div>
+    </div>
+  `).join('');
+
+  const zones = [
+    { name:'Zone 3 – Delhi',         claims:93 },
+    { name:'Zone 2 – Hyderabad',     claims:61 },
+    { name:'Zone 6 – Bengaluru',     claims:31 },
+    { name:'Zone 1 – Chennai (C)',   claims:24 },
+    { name:'Zone 5 – Mumbai',        claims:45 },
+    { name:'Zone 4 – Chennai (S)',   claims:18 },
+  ];
+  const zMax = Math.max(...zones.map(z=>z.claims));
+  document.getElementById('by-zone').innerHTML = zones.map(z => `
+    <div style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+        <span style="font-size:12px;color:var(--color-on-surface-variant);">${z.name}</span>
+        <span style="font-size:12px;font-weight:700;color:var(--color-on-surface);">${z.claims}</span>
+      </div>
+      <div class="prog-bar" style="margin-bottom:0;">
+        <div class="prog-fill" style="background:var(--color-primary);" data-w="${Math.round(z.claims/zMax*100)}"></div>
+      </div>
+    </div>
+  `).join('');
+
+  setTimeout(() => {
+    document.querySelectorAll('.prog-fill[data-w]').forEach(el => {
+      el.style.width = el.dataset.w + '%';
+    });
+  }, 200);
+}
+
+/* ─── Fleet ─── */
+function renderFleet() {
+  document.getElementById('fleet-count').textContent = MOCK_PARTNERS.length;
+  document.getElementById('fleet-list').innerHTML = MOCK_PARTNERS.map(p => {
+    const hasPolicy = ['SW-982341','ZM-445521','SW-334455','SW-889900','SW-131415'].includes(p.id);
+    const sc = scoreColor(p.score);
+    return `
+      <div class="fleet-row">
+        <div class="avatar">${p.name.charAt(0)}</div>
+        <div class="fleet-info">
+          <div class="fleet-name">${p.name}</div>
+          <div class="fleet-meta">${p.id} · ${p.city} · ${p.zone}</div>
+        </div>
+        <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <span class="fleet-score" style="color:${sc};">${p.score}</span>
+          <span class="badge ${hasPolicy ? 'badge-success' : 'badge-danger'}">${hasPolicy ? 'Active' : 'No Policy'}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ─── Boot ─── */
+const PAYOUTS = buildPayouts();
+renderOverview();
+renderPayouts();
+renderReview();
+renderAnalytics();
+renderFleet();
+</script>
+</body>
+</html>
