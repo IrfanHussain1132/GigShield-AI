@@ -317,16 +317,32 @@ const actions = {
   },
 
   async goToPremium() {
-    try {
-      const partnerId = state.partnerId || 'SW-982341';
-      const zone = state.user.zone || 'Zone 4';
-      const [basic, prem] = await Promise.all([
-        api('/workers/premium-quote', { method: 'POST', body: JSON.stringify({ partner_id: partnerId, zone, tier: 'Basic' }) }, state),
-        api('/workers/premium-quote', { method: 'POST', body: JSON.stringify({ partner_id: partnerId, zone, tier: 'Premium' }) }, state)
-      ]);
-      state.premiumQuotes = { key: `${partnerId}|${zone}`, basic, premium: prem };
-      actions.selectTier(state.tier);
-    } catch (e) { console.warn('Premium API issue'); router.navigate('premium'); }
+    // Mock premium quotes — no token needed
+    const score = state.user.score || 82;
+    const discount = score >= 90 ? 3 : score >= 80 ? 2 : 0;
+    state.premiumQuotes = {
+      basic: {
+        final_premium: Math.max(20, 25 - discount),
+        adjustments: [
+          { label: 'Rain Risk (Mon–Wed)', value: 1.20, icon: 'rainy' },
+          { label: 'Heat Warning Peak',   value: 0.40, icon: 'light_mode' },
+          { label: 'Zone Risk Factor',    value: -1.10, icon: 'distance' },
+          { label: 'Clean Claim History', value: -0.20, icon: 'history' },
+          { label: 'Safety Score Reward', value: -2.50, icon: 'insights' },
+        ]
+      },
+      premium: {
+        final_premium: Math.max(40, 47 - discount),
+        adjustments: [
+          { label: 'Rain Risk (Mon–Wed)',  value: 5.20, icon: 'rainy' },
+          { label: 'Heat Warning Peak',    value: 2.40, icon: 'light_mode' },
+          { label: 'Zone Risk Factor',     value: -3.10, icon: 'distance' },
+          { label: 'Clean Claim History',  value: -0.80, icon: 'history' },
+          { label: 'Driver Score Reward',  value: -12.50, icon: 'insights' },
+        ]
+      }
+    };
+    actions.selectTier(state.tier);
   },
 
   selectTier(t) {
@@ -348,40 +364,88 @@ const actions = {
   async activateCoverage() {
     if (state.purchaseInFlight) return;
     state.purchaseInFlight = true;
-    try {
-      const idempotencyKey = createIdempotencyKey('policy');
-      const res = await api('/policies/purchase', {
-        method: 'POST',
-        headers: { 'X-Idempotency-Key': idempotencyKey },
-        body: JSON.stringify({ partner_id: state.partnerId, premium_amount: state.premiumAmount, tier: state.tier === 'premium' ? 'Premium' : 'Basic', idempotency_key: idempotencyKey }),
-      }, state);
-      if (res?.status === 'success') {
-        state.policy = res;
-        router.navigate('confirmation');
-      }
-    } catch (e) { alert(e.detail || 'Payment failed.'); }
-    finally { state.purchaseInFlight = false; }
+    // Mock policy purchase — bypass 401
+    await new Promise(r => setTimeout(r, 900));
+    const now = new Date();
+    const diffToMonday = (now.getDay() === 0 ? -6 : 1) - now.getDay();
+    const start = new Date(now); start.setDate(now.getDate() + (diffToMonday <= 0 ? diffToMonday + 7 : diffToMonday));
+    const end = new Date(start); end.setDate(start.getDate() + 6);
+    const fmt = d => d.toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short' }).replace(',','');
+    state.policy = {
+      status: 'success',
+      policy_id: `SS-${Math.floor(Math.random()*9000)+1000}-IND`,
+      tier: state.tier === 'premium' ? 'Premium' : 'Basic',
+      startDate: fmt(start),
+      endDate: fmt(end),
+      maxPayout: state.tier === 'premium' ? 4080 : 816,
+    };
+    state.purchaseInFlight = false;
+    router.navigate('confirmation');
   },
 
   async goToDashboard() {
     if (_navInFlight) return;
     _navInFlight = true;
-    const pid = state.partnerId || 'SW-982341';
+
+    // ── 30-day weather trigger schedule (mock) ──
+    // Each entry: { date, trigger, rain_mm, aqi, temp_c, payout }
+    const now = new Date();
+    const TRIGGER_SCHEDULE = [
+      { daysAhead:0,  trigger:'Heavy Rain',      rain_mm:72.4,  aqi:88,  temp_c:29, visibility_km:2.1, payout:408 },
+      { daysAhead:2,  trigger:'AQI Danger',       rain_mm:4.2,   aqi:342, temp_c:34, visibility_km:5.0, payout:510 },
+      { daysAhead:4,  trigger:'Heat Wave',        rain_mm:0,     aqi:95,  temp_c:42, visibility_km:8.0, payout:408 },
+      { daysAhead:6,  trigger:'Very Heavy Rain',  rain_mm:138.6, aqi:72,  temp_c:27, visibility_km:1.2, payout:612 },
+      { daysAhead:9,  trigger:'Dense Fog',        rain_mm:1.0,   aqi:110, temp_c:22, visibility_km:0.09,payout:408 },
+      { daysAhead:11, trigger:'Heavy Rain',       rain_mm:68.1,  aqi:80,  temp_c:28, visibility_km:2.8, payout:408 },
+      { daysAhead:13, trigger:'Gridlock',         rain_mm:6.2,   aqi:145, temp_c:33, visibility_km:6.0, payout:306 },
+      { daysAhead:16, trigger:'AQI Danger',       rain_mm:2.1,   aqi:389, temp_c:36, visibility_km:4.5, payout:510 },
+      { daysAhead:18, trigger:'Very Heavy Rain',  rain_mm:152.3, aqi:65,  temp_c:26, visibility_km:0.8, payout:612 },
+      { daysAhead:21, trigger:'Heat Wave',        rain_mm:0,     aqi:88,  temp_c:43, visibility_km:9.0, payout:408 },
+      { daysAhead:23, trigger:'Heavy Rain',       rain_mm:79.5,  aqi:91,  temp_c:28, visibility_km:2.0, payout:408 },
+      { daysAhead:25, trigger:'Dense Fog',        rain_mm:0.5,   aqi:122, temp_c:21, visibility_km:0.07,payout:408 },
+      { daysAhead:27, trigger:'Gridlock',         rain_mm:8.4,   aqi:160, temp_c:32, visibility_km:5.5, payout:306 },
+      { daysAhead:29, trigger:'Very Heavy Rain',  rain_mm:145.0, aqi:70,  temp_c:25, visibility_km:1.0, payout:612 },
+    ];
+    state.triggerSchedule = TRIGGER_SCHEDULE.map(t => {
+      const d = new Date(now); d.setDate(now.getDate() + t.daysAhead);
+      return { ...t, date: d.toLocaleDateString('en-IN', { day:'2-digit', month:'short' }) };
+    });
+
+    // Today's weather = first upcoming trigger entry
+    const todayTrigger = TRIGGER_SCHEDULE[0];
     const zone = state.user.zone || 'Zone 4';
-    try {
-      const [summary, weather, forecast, alert] = await Promise.all([
-        api(`/dashboard/summary/${pid}`, {}, state),
-        api(`/dashboard/live-weather/${zone}`, {}, state),
-        api(`/dashboard/risk-forecast/${zone}`, {}, state),
-        api(`/forecast/alert/${zone}`, {}, state)
-      ]);
-      state.dashboard = summary;
-      state.weather = weather;
-      state.riskForecast = forecast;
-      state.forecastAlert = alert;
-      router.navigate('home');
-    } catch (e) { console.warn('Dashboard fetch issue'); router.navigate('home'); }
-    finally { _navInFlight = false; }
+
+    state.weather = {
+      rain_mm:        todayTrigger.rain_mm,
+      aqi:            todayTrigger.aqi,
+      temp_c:         todayTrigger.temp_c,
+      visibility_km:  todayTrigger.visibility_km,
+      wind_kmh:       18,
+      zone,
+    };
+    state.dashboard = {
+      has_active_policy:  Boolean(state.policy),
+      today_earnings:     todayTrigger.payout,
+      month_total:        TRIGGER_SCHEDULE.slice(0,4).reduce((s,t)=>s+t.payout,0),
+      policy_streak:      state.user.tenureMonths ? Math.min(12, Math.floor(state.user.tenureMonths/2)) : 5,
+      insurance_payout:   todayTrigger.payout,
+      zone,
+      city:               state.user.city || 'South Chennai',
+      score:              state.user.score || 82,
+    };
+    state.riskForecast = [
+      { time:'Now',   probability: Math.min(98, Math.round(todayTrigger.rain_mm)), icon:'rainy' },
+      { time:'+2 hr', probability: 45, icon:'rainy_light' },
+      { time:'+4 hr', probability: 22, icon:'cloud' },
+    ];
+    state.forecastAlert = {
+      message: `⚠ ${todayTrigger.trigger} trigger expected today in ${zone} — payout ₹${todayTrigger.payout} queued.`,
+      red_hours_72h:    6,
+      orange_hours_72h: 14,
+      risk_percentage:  78,
+    };
+    router.navigate('home');
+    _navInFlight = false;
   },
 
   async loadZoneDetails() {
@@ -392,16 +456,22 @@ const actions = {
   },
 
   async goToPayouts() {
-    const pid = state.partnerId || 'SW-982341';
-    try {
-      const [history, total] = await Promise.all([
-        api(`/dashboard/payout-history/${pid}`, {}, state),
-        api(`/dashboard/payout-total/${pid}`, {}, state)
-      ]);
-      state.payoutHistory = history;
-      state.payoutTotal = total;
-      router.navigate('payouts');
-    } catch (e) { router.navigate('payouts'); }
+    // Mock payout history from trigger schedule
+    const schedule = state.triggerSchedule || [];
+    const past = schedule.filter(t => t.daysAhead <= 0);
+    state.payoutHistory = past.length > 0 ? past.map(t => ({
+      type:   t.trigger,
+      amount: t.payout,
+      status: 'Credited',
+      date:   t.date,
+      upi_ref: `P-SSAI-${Math.random().toString(36).slice(2,10).toUpperCase()}`,
+    })) : [
+      { type:'Heavy Rain', amount:408, status:'Credited', date:'17 Apr', upi_ref:'P-SSAI-AB12CD34' },
+      { type:'AQI Danger', amount:510, status:'Credited', date:'15 Apr', upi_ref:'P-SSAI-EF56GH78' },
+    ];
+    const totalPaid = state.payoutHistory.reduce((s,p)=>s+p.amount,0);
+    state.payoutTotal = { total: totalPaid, count: state.payoutHistory.length, this_month: totalPaid, this_month_count: state.payoutHistory.length };
+    router.navigate('payouts');
   },
 
   async goToPayoutCelebration() {

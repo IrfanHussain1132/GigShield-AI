@@ -140,7 +140,7 @@ export function verificationScoreScreen(state) {
   const ringFillDeg = Math.round((score / 100) * 360);
 
   return `
-<div class="min-h-full bg-surface flex flex-col pb-24">
+<div class="bg-surface flex flex-col" style="min-height:100%;padding-bottom:110px;">
   ${appBar(state)}
 
   <section class="px-6 py-5">
@@ -185,6 +185,36 @@ export function verificationScoreScreen(state) {
         <p class="font-noto text-2xl font-black text-on-secondary-container drop-shadow-sm">${formatCurrency(potential)}</p>
       </div>
       <div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center shadow-lg relative z-10"><span class="material-symbols-outlined text-on-secondary-container">trending_up</span></div>
+    </div>
+  </section>
+
+  <section class="px-6 pb-4">
+    <div class="bg-surface-container-lowest rounded-[24px] p-5 shadow-sm border border-outline-variant/10">
+      <p class="text-[10px] font-black text-outline uppercase tracking-widest mb-3">Upcoming Trigger Dates · 30 Days</p>
+      <div class="space-y-2" id="trigger-schedule">
+        ${(() => {
+          const rows = [
+            { days:0,  label:'Heavy Rain',     payout:408, icon:'rainy'        },
+            { days:2,  label:'AQI Danger',      payout:510, icon:'air'          },
+            { days:4,  label:'Heat Wave',       payout:408, icon:'thermostat'   },
+            { days:6,  label:'Very Heavy Rain', payout:612, icon:'thunderstorm' },
+            { days:9,  label:'Dense Fog',       payout:408, icon:'foggy'        },
+            { days:11, label:'Heavy Rain',      payout:408, icon:'rainy'        },
+            { days:13, label:'Gridlock',        payout:306, icon:'traffic'      },
+          ];
+          return rows.map(r => {
+            const d = new Date(); d.setDate(d.getDate() + r.days);
+            const dateStr = r.days === 0 ? 'Today' : d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
+            const hi = r.days === 0;
+            return `<div class="flex items-center gap-3 ${hi ? 'bg-primary/5 rounded-2xl px-3 py-2 -mx-3' : 'py-1'}">
+              <span class="material-symbols-outlined text-primary text-[18px]">${r.icon}</span>
+              <span class="flex-1 text-sm font-semibold text-on-surface">${r.label}</span>
+              <span class="text-[10px] font-bold text-outline">${dateStr}</span>
+              <span class="text-sm font-black text-primary">&#8377;${r.payout}</span>
+            </div>`;
+          }).join('');
+        })()}
+      </div>
     </div>
   </section>
 
