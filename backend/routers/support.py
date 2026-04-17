@@ -3,7 +3,7 @@
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-from services.auth_service import require_current_user
+from services.auth_service import get_current_user
 import config
 
 router = APIRouter(prefix="/api/v1/support", tags=["support"])
@@ -84,7 +84,7 @@ class ChatResponse(BaseModel):
 @router.post("/chat", response_model=ChatResponse)
 async def chat_with_support(
     request: ChatMessage,
-    current_user: dict = Depends(require_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """Chat with SecureSync AI Support powered by Groq (LLaMA 3)."""
     if not config.GROQ_API_KEY:

@@ -590,21 +590,78 @@ const actions = {
     const input = document.getElementById('chat-input');
     if (!input || !input.value.trim() || state.chatLoading) return;
     const msg = input.value.trim();
-    state.chatHistory.push({ role: 'user', content: msg });
     input.value = '';
     state.chatLoading = true;
-    // Update chat section only, not full page re-render
-    const chatContainer = document.getElementById('chat-messages');
-    if (chatContainer) {
-      chatContainer.innerHTML += `<div class="bg-primary/10 text-on-surface text-sm p-3 rounded-2xl rounded-br-sm ml-auto max-w-[80%]">${msg}</div>`;
-      chatContainer.innerHTML += `<div class="bg-surface-container-high text-on-surface-variant text-sm p-3 rounded-2xl rounded-bl-sm max-w-[80%] animate-pulse">Thinking...</div>`;
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
+    state.chatHistory.push({ role: 'user', content: msg });
+
+    // Re-render chat body using the correct container ID ('chat-body')
+    const renderChatBody = () => {
+      const chatBody = document.getElementById('chat-body');
+      if (!chatBody) return;
+      chatBody.innerHTML = state.chatHistory.map(m => `
+        <div class="flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}">
+          <div class="max-w-[85%] px-4 py-2.5 rounded-2xl text-[11px] font-medium leading-relaxed shadow-sm
+            ${m.role === 'user'
+              ? 'bg-primary text-white rounded-tr-none'
+              : 'bg-white text-on-surface-variant border border-outline-variant/10 rounded-tl-none'}">
+            ${m.content}
+          </div>
+        </div>
+      `).join('') + (state.chatLoading ? `
+        <div class="flex justify-start">
+          <div class="bg-white border border-outline-variant/10 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-1">
+            <div class="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce"></div>
+            <div class="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce" style="animation-delay:150ms"></div>
+            <div class="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce" style="animation-delay:300ms"></div>
+          </div>
+        </div>` : '');
+      chatBody.scrollTop = chatBody.scrollHeight;
+    };
+
+    renderChatBody();
+
+    let reply = 'Network issue bhai. Please try again.';
     try {
-      const res = await api('/support/chat', { method: 'POST', body: JSON.stringify({ message: msg, history: state.chatHistory.slice(0, -1) }) }, state);
-      state.chatHistory.push({ role: 'assistant', content: res?.reply || "Sorry bhai, something went wrong." });
-    } catch (e) { state.chatHistory.push({ role: 'assistant', content: "Network issue bhai." }); }
-    finally { state.chatLoading = false; router.navigate('account'); }
+      const SYSTEM_PROMPT = `You are SecureSync AI Support — a helpful, friendly assistant for food delivery partners (Swiggy/Zomato riders) who use our parametric income insurance app.
+SecureSync AI is India's first AI-powered parametric income insurance for gig economy food delivery workers. It auto-detects weather disruptions and pays instantly via UPI — no claims needed.
+Plans: Basic ₹49–₹75/week (Rain, Fog, Gridlock) max payout ₹816/week. Premium ₹105–₹260/week (+ Heat, AQI, Bandh, Outage) max payout ₹4080/week.
+Payout = EPH(₹102/hr) × Disruption Hours. Heavy Rain=₹408, Very Heavy Rain=₹612, Fog=₹408, Heat=₹408, Gridlock=₹306, AQI 301-400=₹510, AQI 401-500=₹612, Bandh=₹816.
+Be warm, concise, use simple language. Use ₹ for amounts. Use "bhai" occasionally. Keep replies under 150 words. Use emojis ✅🌧️💰🛡️ sparingly.`;
+
+      const messages = [{ role: 'system', content: SYSTEM_PROMPT }];
+      for (const h of state.chatHistory.slice(-10)) {
+        if (h.role === 'user' || h.role === 'assistant') messages.push(h);
+      }
+
+      const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_GROQ_API_KEY || ''}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages,
+          temperature: 0.6,
+          max_tokens: 512,
+        }),
+      });
+
+      if (groqRes.ok) {
+        const data = await groqRes.json();
+        reply = data?.choices?.[0]?.message?.content?.trim() || 'Sorry bhai, something went wrong.';
+      } else {
+        console.warn('[Chat Groq error]', groqRes.status);
+        reply = 'Sorry bhai, AI service is busy right now. Try again in a moment. 🙏';
+      }
+    } catch (e) {
+      console.warn('[Chat]', e.message || e);
+      reply = 'Network issue bhai. Please check your connection and try again.';
+    } finally {
+      state.chatLoading = false;
+      state.chatHistory.push({ role: 'assistant', content: reply });
+      renderChatBody();
+    }
   },
 
   changeLanguage(lang) {
