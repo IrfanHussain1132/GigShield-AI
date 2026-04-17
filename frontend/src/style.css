@@ -87,23 +87,25 @@
     padding: 0;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
-    overscroll-behavior-y: none; /* Prevent vertical pull-to-refresh artifacts */
+    /* NOTE: Do NOT set overscroll-behavior here — it turns every
+       overflow:hidden card into a scroll trap that blocks #screen-container */
 }
 
 body {
-    background-color: #f0f2f1; /* Subtle contrast to app container */
+    background-color: #f0f2f1;
     color: var(--color-on-background);
     font-family: var(--font-body);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
-    overscroll-behavior-x: none; /* Prevent horizontal bounce artifacts */
+    overflow-y: hidden;        /* body itself should never scroll */
+    overscroll-behavior: none; /* prevent pull-to-refresh on the body */
 }
 
 .app-container {
     width: min(100vw, 430px);
     height: 100vh;
-    height: 100dvh; /* Mobile viewport height */
+    height: 100dvh;
     margin: 0 auto;
     background: var(--color-background);
     position: relative;
@@ -111,6 +113,7 @@ body {
     flex-direction: column;
     box-shadow: 0 0 100px rgba(0,0,0,0.1);
     overflow: hidden;
+    overscroll-behavior: none; /* prevent bounce on the outer shell */
 }
 
 #screen-container {
@@ -123,6 +126,7 @@ body {
     touch-action: pan-y;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
+    overscroll-behavior-y: contain; /* scroll stops here, doesn't leak to body */
 }
 
 /* Every direct-child screen div must fill at least the container height
