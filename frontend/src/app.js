@@ -259,6 +259,44 @@ const actions = {
       return;
     }
 
+    // Local mock lookup (matches seed_data.py MOCK_PARTNERS)
+    // This lets the app work without a backend auth token
+    const MOCK_PARTNERS = {
+      'SW-982341': { name:'Rajan Kumar',     zone:'Zone 4', city:'South Chennai',   score:92, hourly_rate:102, weekly_income:6120,  status:'ACTIVE' },
+      'ZM-112233': { name:'Suresh Babu',      zone:'Zone 1', city:'Central Chennai', score:78, hourly_rate:98,  weekly_income:5880,  status:'ACTIVE' },
+      'SW-223344': { name:'Arun Kumar',        zone:'Zone 4', city:'South Chennai',   score:85, hourly_rate:100, weekly_income:6000,  status:'ACTIVE' },
+      'ZM-998877': { name:'Bala Subramanian', zone:'Zone 1', city:'Central Chennai', score:96, hourly_rate:115, weekly_income:6900,  status:'ACTIVE' },
+      'ZM-445521': { name:'Amit Verma',       zone:'Zone 2', city:'Hyderabad',       score:85, hourly_rate:100, weekly_income:6000,  status:'ACTIVE' },
+      'SW-667788': { name:'Priya Reddy',      zone:'Zone 2', city:'Hyderabad',       score:88, hourly_rate:105, weekly_income:6300,  status:'ACTIVE' },
+      'SW-776655': { name:'Rahul Rao',        zone:'Zone 2', city:'Hyderabad',       score:74, hourly_rate:92,  weekly_income:5520,  status:'ACTIVE' },
+      'SW-334455': { name:'Vikram Singh',     zone:'Zone 3', city:'Delhi',           score:94, hourly_rate:110, weekly_income:6600,  status:'ACTIVE' },
+      'ZM-556677': { name:'Rakesh Sharma',    zone:'Zone 3', city:'Delhi',           score:72, hourly_rate:95,  weekly_income:5700,  status:'ACTIVE' },
+      'ZM-123456': { name:'Sandeep Kumar',    zone:'Zone 3', city:'Delhi',           score:89, hourly_rate:105, weekly_income:6300,  status:'ACTIVE' },
+      'SW-889900': { name:'Deepak Patil',     zone:'Zone 5', city:'Mumbai',          score:90, hourly_rate:108, weekly_income:6480,  status:'ACTIVE' },
+      'ZM-101112': { name:'Farhan Sheikh',    zone:'Zone 5', city:'Mumbai',          score:80, hourly_rate:100, weekly_income:6000,  status:'ACTIVE' },
+      'SW-556644': { name:'Prasad More',      zone:'Zone 5', city:'Mumbai',          score:84, hourly_rate:102, weekly_income:6120,  status:'ACTIVE' },
+      'SW-131415': { name:'Karthik Gowda',   zone:'Zone 6', city:'Bengaluru',       score:83, hourly_rate:104, weekly_income:6240,  status:'ACTIVE' },
+      'ZM-161718': { name:'Naveen Kumar',     zone:'Zone 6', city:'Bengaluru',       score:87, hourly_rate:102, weekly_income:6120,  status:'ACTIVE' },
+      'ZM-202122': { name:'Vishnu Murthy',    zone:'Zone 6', city:'Bengaluru',       score:75, hourly_rate:94,  weekly_income:5640,  status:'ACTIVE' },
+      'SW-303132': { name:'Siddharth J',      zone:'Zone 6', city:'Bengaluru',       score:97, hourly_rate:112, weekly_income:6720,  status:'ACTIVE' },
+    };
+
+    const mockMatch = MOCK_PARTNERS[state.partnerId.toUpperCase()];
+    if (mockMatch) {
+      Object.assign(state.user, {
+        name: mockMatch.name,
+        zone: mockMatch.zone,
+        city: mockMatch.city,
+        score: mockMatch.score,
+        hourlyRate: mockMatch.hourly_rate,
+        weeklyIncome: mockMatch.weekly_income,
+        workerId: state.partnerId.toUpperCase(),
+      });
+      router.navigate('verification_score');
+      return;
+    }
+
+    // Fallback: try backend API (requires token)
     try {
       const res = await api('/workers/verify', {
         method: 'POST',
@@ -273,12 +311,8 @@ const actions = {
         router.navigate('verification_score');
       }
     } catch (e) {
-      if (e.status === 401) {
-        alert('Session expired. Please log in again.');
-        actions.logout();
-      } else {
-        alert(e.detail || 'Verification failed. Please check your Partner ID.');
-      }
+      // If unknown ID and backend also fails, give a clear message
+      alert(e.detail || 'Partner ID not found. Please check and try again.');
     }
   },
 

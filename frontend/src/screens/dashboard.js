@@ -96,7 +96,7 @@ export function homeScreen(state) {
   }).join('');
 
   return `
-<div class="min-h-full bg-stone-50/50 flex flex-col pb-6">
+<div class="min-h-full bg-stone-50/50 flex flex-col pb-24">
   <header class="top-shell px-6 py-4 flex justify-between items-center">
     <div class="flex items-center gap-3">
       <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-black text-lg shadow-sm border border-white/20">
