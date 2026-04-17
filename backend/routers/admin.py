@@ -561,7 +561,7 @@ async def predictive_claims(db: Session = Depends(get_db)):
         # Predict next week based on trend + forecast
         weekly_avg = hist_claims / 4 if hist_claims > 0 else 0
         trend_factor = (recent_claims / max(weekly_avg, 0.5)) if weekly_avg > 0 else 1.0
-        forecast_factor = 1 + (forecast_summary["max_risk_72h"] / 100) * 0.5
+        forecast_factor = 1 + (forecast_summary.get("max_risk_72h", 0) / 100) * 0.5
 
         predicted_claims = max(0, round(weekly_avg * trend_factor * forecast_factor))
         avg_payout = 408  # ₹408 per claim average
@@ -569,9 +569,9 @@ async def predictive_claims(db: Session = Depends(get_db)):
 
         # Identify risk factors
         risk_factors = []
-        if forecast_summary["red_hours"] > 5:
-            risk_factors.append(f"{forecast_summary['red_hours']} RED hours in 72h forecast")
-        if forecast_summary["max_risk_6h"] >= 70:
+        if forecast_summary.get("red_hours", 0) > 5:
+            risk_factors.append(f"{forecast_summary.get('red_hours', 0)} RED hours in 72h forecast")
+        if forecast_summary.get("max_risk_6h", 0) >= 70:
             risk_factors.append("High imminent 6h risk")
         if trend_factor > 1.5:
             risk_factors.append("Claims trending up vs 4-week average")
@@ -590,7 +590,7 @@ async def predictive_claims(db: Session = Depends(get_db)):
             "historical_weekly_avg": round(weekly_avg, 1),
             "last_week_claims": recent_claims,
             "trend_factor": round(trend_factor, 2),
-            "forecast_risk_72h": forecast_summary["max_risk_72h"],
+            "forecast_risk_72h": forecast_summary.get("max_risk_72h", 0),
             "risk_factors": risk_factors,
             "confidence": min(95, 60 + hist_claims * 2),
         })

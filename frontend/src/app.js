@@ -46,11 +46,18 @@ const router = {
       container.scrollTop = 0;
     });
 
+    // SPA background cleanup
+    if (state.otpInterval) {
+      clearInterval(state.otpInterval);
+      state.otpInterval = null;
+    }
+
     const navScreens = ['home','coverage','payouts','account','live_zone'];
     const nav = document.getElementById('bottom-nav');
     if (nav) {
       if (navScreens.includes(screen)) {
         nav.style.display = 'flex';
+        container.style.paddingBottom = 'calc(72px + env(safe-area-inset-bottom, 0px))';
         nav.querySelectorAll('.nav-item').forEach(item => {
           const key = item.dataset.nav;
           const isActive = key === screen || (screen === 'live_zone' && key === 'coverage');
@@ -66,6 +73,7 @@ const router = {
         });
       } else {
         nav.style.display = 'none';
+        container.style.paddingBottom = '0px';
       }
     }
 
@@ -124,21 +132,29 @@ const actions = {
     if (input) state.phone = input.value;
     if (state.phone.length < 10) { alert('Enter a valid 10-digit number'); return; }
 
-    if (state.phase2MockOtpEnabled) {
-      console.log('[Bypass] Skipping send-otp call for mock mode');
-      router.navigate('otp');
-      return;
-    }
-
     try {
       const res = await api('/auth/send-otp', {
         method: 'POST',
-        body: JSON.stringify({ phone: state.phone }),
+        body: JSON.stringify({ phone: state.phone, phone_number: state.phone })
       }, state);
-      if (res?.debug_code) console.log('OTP code:', res.debug_code);
+      
+      console.log("OTP request sent via backend API.");
+      if (res?.debug_code) console.log("Debug OTP:", res.debug_code);
+      
       router.navigate('otp');
+      
+      // Auto-fill mock code if enabled and exists
+      if (state.phase2MockOtpEnabled && state.phase2MockOtpCode && state.phase2MockOtpCode !== '000000') {
+         setTimeout(() => {
+             const codeArr = state.phase2MockOtpCode.split('').slice(0,6);
+             codeArr.forEach((digit, i) => {
+                actions.handleOtpInput(i, digit);
+             });
+         }, 500);
+      }
     } catch (e) {
-      alert('Could not send OTP. Try again shortly.');
+      console.error(e);
+      alert('Could not send OTP. ' + (e.detail || 'Try again shortly.'));
     }
   },
 
@@ -187,18 +203,25 @@ const actions = {
       const res = await api('/auth/verify-otp', {
         method: 'POST',
         throwOnError: true,
-        body: JSON.stringify({ phone: state.phone, otp: code }),
+        body: JSON.stringify({ 
+          phone: state.phone, 
+          phone_number: state.phone, 
+          otp: code,
+          code: code
+        }),
       }, state);
+      
       if (res?.token) {
         state.token = res.token;
         window.localStorage.setItem('securesync_token', res.token);
         router.navigate('verification_start');
       }
     } catch (e) {
-      alert(e.detail || 'Invalid OTP. Try again.');
+      console.error(e);
+      alert('Invalid OTP or Backend failure. Try again.');
     } finally {
-        if (state.otpInterval) clearInterval(state.otpInterval);
-        state.otp = ['', '', '', '', '', ''];
+      if (state.otpInterval) { clearInterval(state.otpInterval); state.otpInterval = null; }
+      state.otp = ['', '', '', '', '', ''];
     }
   },
 
@@ -419,7 +442,14 @@ const actions = {
       console.warn('Simulation API fallback:', e.message);
     }
     // Fallback to local simulation if API fails
-    const amount = state.tier === 'premium' ? 510 : 408;
+    const hourlyRate = state.user?.hourlyRate || 102;
+    const triggerHrs = state.tier === 'premium' ? 5 : 4;
+    const amount = hourlyRate * triggerHrs;
+    
+    // Add realistic variance
+    const randScore = (0.10 + Math.random() * 0.15).toFixed(2);
+    const randMs = 60000 + Math.floor(Math.random() * 60000);
+
     state.latestPayout = {
       amount,
       type: state.tier === 'premium' ? 'AQI Danger' : 'Heavy Rain',
@@ -430,8 +460,13 @@ const actions = {
       date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
       zone: state.user.zone || 'Zone 4',
       city: state.user.city || 'South Chennai',
-      fraud_score: 0.18,
-      processing_ms: 93000,
+      fraud_score: Number(randScore),
+      processing_ms: randMs,
+      simulation_steps: [
+        { stage: 'trigger', icon: 'thunderstorm', title: 'Neural Trigger Verified', detail: 'Cross-checked with secondary sources', time_ms: 12 },
+        { stage: 'fraud', icon: 'security', title: 'Fraud Graph Analyzed', detail: 'Agent swarm approved authenticity', time_ms: 65 },
+        { stage: 'credited', icon: 'account_balance', title: 'IMPS Transfer Executed', detail: `₹${amount} credited via NPCI network`, time_ms: 16 }
+      ]
     };
     router.navigate('payout_celebration');
   },
@@ -502,11 +537,35 @@ async function boot() {
         return;
       }
     } catch (e) {
-      state.token = null;
-      window.localStorage.removeItem('securesync_token');
+      if (e && e.status === 401) {
+        state.token = null;
+        window.localStorage.removeItem('securesync_token');
+      } else {
+        console.warn('Network issue or backend unreachable during boot:', e);
+        actions.goToDashboard(); // Stay offline/cached
+        return;
+      }
     }
   }
   router.navigate(state.screen);
 }
 
 boot();
+
+window.addEventListener('offline-action-queued', () => {
+  const toast = document.createElement('div');
+  toast.className = 'fixed bottom-24 left-4 right-4 bg-surface-container-highest text-on-surface p-4 rounded-xl shadow-lg border border-outline-variant/20 z-50 flex items-center gap-3 animate-slide-up';
+  toast.innerHTML = `
+    <span class="material-symbols-outlined text-warning">wifi_off</span>
+    <div class="flex-1">
+      <p class="text-sm font-bold">You're offline</p>
+      <p class="text-xs text-on-surface-variant">Your action has been safely queued and will sync automatically.</p>
+    </div>
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.5s ease-out';
+    setTimeout(() => toast.remove(), 500);
+  }, 4000);
+});

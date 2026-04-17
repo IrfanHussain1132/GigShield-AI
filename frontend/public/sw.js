@@ -72,3 +72,57 @@ self.addEventListener('fetch', (event) => {
         })
     );
 });
+
+// IndexedDB helper for Background Sync
+const DB_NAME = 'securesync-offline';
+function openSyncDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = e => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains('requests')) {
+                db.createObjectStore('requests', { keyPath: 'id', autoIncrement: true });
+            }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function flushOfflineQueue() {
+    const db = await openSyncDB();
+    const requests = await new Promise((resolve, reject) => {
+        const tx = db.transaction('requests', 'readonly');
+        const req = tx.objectStore('requests').getAll();
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+
+    if (!requests || requests.length === 0) return;
+
+    for (const req of requests) {
+        try {
+            const res = await fetch(req.url, {
+                method: req.method,
+                headers: req.headers,
+                body: req.body
+            });
+            if (res.ok) {
+                await new Promise((resolve) => {
+                    const tx = db.transaction('requests', 'readwrite');
+                    tx.objectStore('requests').delete(req.id);
+                    tx.oncomplete = () => resolve();
+                });
+            }
+        } catch (e) {
+            console.error('Background sync failed for', req.url, e);
+            // Will retry on next sync
+        }
+    }
+}
+
+self.addEventListener('sync', (event) => {
+    if (event.tag === 'offline-actions') {
+        event.waitUntil(flushOfflineQueue());
+    }
+});

@@ -74,7 +74,6 @@ def seed_demo_data():
                 is_verified=True,
                 hourly_rate=partner["hourly_rate"],
                 weekly_income=partner["weekly_income"],
-                weekly_income_paise=partner["weekly_income"] * 100,
                 tenure_months=partner["tenure_months"],
                 created_at=now - timedelta(days=partner["tenure_months"] * 30),
             )

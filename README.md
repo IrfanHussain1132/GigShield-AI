@@ -94,7 +94,7 @@ Sign Up → AI Risk Profiling → Buy Weekly Policy → Auto Monitoring → Auto
 
 **Decision: Mobile-first Progressive Web App (PWA)**
 
-PWA wins because: no Play Store barrier (partners share links on WhatsApp), lighter on ₹10,000–₹15,000 Android devices, instant deploys without app updates, and a single Next.js codebase fits our 6-week schedule. Designed at 390×844px with 48px+ touch targets and Noto Sans for Tamil/Telugu/Hindi support.
+PWA wins because: no Play Store barrier (partners share links on WhatsApp), lighter on ₹10,000–₹15,000 Android devices, instant deploys without app updates, and a single Next.js codebase fits our 6-week schedule. Designed Noto Sans for Tamil/Telugu/Hindi support.
 
 ---
 

@@ -1,5 +1,6 @@
 # SecureSync AI — FastAPI Application (Phase 3 – Soar)
 from contextlib import asynccontextmanager
+from starlette.concurrency import run_in_threadpool
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -83,40 +84,43 @@ def _normalize_legacy_money_values(db):
         )
         db.commit()
 
+def _db_startup_tasks():
+    db = SessionLocal()
+    try:
+        worker_count = db.query(models.Worker).count()
+        if worker_count == 0:
+            logger.info("[Startup] Seeding Rajan Kumar (SW-982341)")
+            from seed_data import MOCK_PARTNERS
+            demo = MOCK_PARTNERS.get("SW-982341", {})
+            seed_worker = models.Worker(
+                partner_id="SW-982341", name=demo.get("name", "Rajan Kumar"),
+                platform=demo.get("platform", "swiggy"), zone=demo.get("zone", "Zone 4"), city=demo.get("city", "South Chennai"),
+                latitude=demo.get("lat", 13.0125), longitude=demo.get("lon", 80.2241), score=demo.get("score", 92),
+                partner_since=demo.get("tenure", "March 2023"), tenure_months=demo.get("tenure_months", 36),
+                hourly_rate=demo.get("hourly_rate", 102), weekly_income=demo.get("weekly_income", 6120), is_verified=True,
+            )
+            db.add(seed_worker); db.commit()
+
+        # Phase 3 – Scale: Seed rich demo data if DB is sparse
+        try:
+            from seed_demo import seed_demo_data
+            seed_demo_data()
+        except Exception as seed_err:
+            logger.warning("[Startup] Demo seed skipped: %s", seed_err)
+
+        _normalize_legacy_money_values(db)
+
+        # Phase 3: Build fraud graph from existing data
+        fraud_graph_service.build_graph_from_db(db)
+    finally:
+        db.close()
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: Database init
     if config.AUTO_CREATE_SCHEMA:
         models.Base.metadata.create_all(bind=engine)
-        db = SessionLocal()
-        try:
-            worker_count = db.query(models.Worker).count()
-            if worker_count == 0:
-                logger.info("[Startup] Seeding Rajan Kumar (SW-982341)")
-                from seed_data import MOCK_PARTNERS
-                demo = MOCK_PARTNERS.get("SW-982341", {})
-                seed_worker = models.Worker(
-                    partner_id="SW-982341", name=demo.get("name", "Rajan Kumar"),
-                    platform=demo.get("platform", "swiggy"), zone=demo.get("zone", "Zone 4"), city=demo.get("city", "South Chennai"),
-                    latitude=demo.get("lat", 13.0125), longitude=demo.get("lon", 80.2241), score=demo.get("score", 92),
-                    partner_since=demo.get("tenure", "March 2023"), tenure_months=demo.get("tenure_months", 36),
-                    hourly_rate=demo.get("hourly_rate", 102), weekly_income=demo.get("weekly_income", 6120), is_verified=True,
-                )
-                db.add(seed_worker); db.commit()
-
-            # Phase 3 – Scale: Seed rich demo data if DB is sparse
-            try:
-                from seed_demo import seed_demo_data
-                seed_demo_data()
-            except Exception as seed_err:
-                logger.warning("[Startup] Demo seed skipped: %s", seed_err)
-
-            _normalize_legacy_money_values(db)
-
-            # Phase 3: Build fraud graph from existing data
-            fraud_graph_service.build_graph_from_db(db)
-        finally:
-            db.close()
+        await run_in_threadpool(_db_startup_tasks)
     else:
         logger.info("[Startup] AUTO_CREATE_SCHEMA disabled. Expecting Alembic-managed schema.")
     
@@ -143,6 +147,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # --- Global Exception Handler (Crash Protection) ---
 @app.exception_handler(Exception)

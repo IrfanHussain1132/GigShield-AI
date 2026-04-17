@@ -12,8 +12,12 @@ from services import redis_service
 from services import otp_delivery_service
 from utils.time_utils import utcnow
 import config
+import os
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
+
+
+
 
 
 class OTPRequest(BaseModel):
@@ -210,6 +214,8 @@ def verify_otp(request: OTPVerifyRequest, http_request: Request, db: Session = D
 
     worker_id = worker.id
 
+    worker_id = worker.id
+
     # Generate JWT
     token = create_token(phone=phone, worker_id=worker_id)
 
@@ -219,6 +225,10 @@ def verify_otp(request: OTPVerifyRequest, http_request: Request, db: Session = D
         "worker_id": worker_id,
         "is_new_user": worker.partner_id is None,
     }
+
+
+
+
 
 
 @router.get("/me")

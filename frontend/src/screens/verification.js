@@ -81,9 +81,9 @@ export function verificationStartScreen(state) {
         </div>
         <div class="relative group">
           <input id="partner-id-input" aria-label="Partner ID Number" 
-            class="w-full h-18 bg-white border-2 border-outline-variant/10 group-focus-within:border-primary/40 rounded-[24px] px-8 text-on-surface font-black text-2xl placeholder:text-outline/20 transition-all outline-none shadow-sm focus:shadow-2xl focus:shadow-primary/5 tracking-wider" 
+            class="w-full h-18 bg-white border-2 border-outline-variant/10 group-focus-within:border-primary/40 rounded-[24px] px-8 text-on-surface font-black text-2xl placeholder:text-outline/20 transition-all outline-none shadow-sm focus:shadow-2xl focus:shadow-primary/5 tracking-wider uppercase" 
             placeholder="e.g. ${state.platform === 'zomato' ? 'ZM-556677' : 'SW-982341'}" type="text" value="${state.partnerId || ''}" 
-            oninput="state.partnerId = this.value"/>
+            oninput="this.value = this.value.toUpperCase(); state.partnerId = this.value; const iv = /^[A-Z]{2}-[0-9]{4,6}$/.test(this.value); const b = document.getElementById('btn-verify'); if(b) { b.disabled = !iv; b.style.opacity = iv ? '1' : '0.5'; } "/>
           <div class="absolute right-8 top-1/2 -translate-y-1/2 flex items-center gap-2">
             <div id="id-status-indicator" class="w-1.5 h-1.5 rounded-full ${state.partnerId ? 'bg-primary animate-pulse' : 'bg-outline-variant'}"></div>
             <span class="material-symbols-outlined text-2xl text-primary/30 group-focus-within:text-primary transition-colors">fingerprint</span>
@@ -112,8 +112,8 @@ export function verificationStartScreen(state) {
     </div>
   </section>
 
-  <footer class="sticky bottom-0 px-6 py-8 bg-gradient-to-t from-[#fdfcfb] via-[#fdfcfb] to-transparent pointer-events-none">
-    <button onclick="actions.verifyPartner()" class="btn btn-primary h-20 rounded-[28px] shadow-2xl shadow-primary/30 pointer-events-auto active:scale-95 transition-transform flex items-center px-8">
+  <footer class="sticky-bottom-action">
+    <button id="btn-verify" onclick="actions.verifyPartner()" ${state.partnerId && /^[A-Z]{2}-[0-9]{4,6}$/.test(state.partnerId) ? '' : 'disabled style="opacity: 0.5;"'} class="btn btn-primary h-20 rounded-[28px] shadow-2xl shadow-primary/30 pointer-events-auto active:scale-95 transition-transform flex items-center px-8">
       <span class="flex-1 text-left font-black uppercase tracking-widest text-sm">${t('verify_partner_id')}</span>
       <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-sm border border-white/10 shadow-inner">
         <span class="material-symbols-outlined">arrow_forward</span>
@@ -182,7 +182,7 @@ export function verificationScoreScreen(state) {
     </div>
   </section>
 
-  <footer class="mt-auto px-6 py-8 bg-gradient-to-t from-surface via-surface to-transparent pt-12 z-10 sticky bottom-0">
+  <footer class="sticky-bottom-action">
     <button onclick="actions.goToPremium()" class="btn btn-primary h-20 rounded-[28px] shadow-2xl shadow-primary/30 pointer-events-auto active:scale-95 transition-transform flex items-center px-8 w-full">
       <span class="flex-1 text-left font-black uppercase tracking-widest text-sm">${t('looks_right_continue') || 'Looks Right - Continue'}</span>
       <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-sm border border-white/10 shadow-inner">

@@ -1,5 +1,8 @@
 # SecureSync AI — Phase 3 Configuration
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def _csv_env(name: str, default: str) -> list[str]:
@@ -28,8 +31,7 @@ ENV_PROD = os.getenv("ENV_PROD", "false").lower() == "true"
 JWT_SECRET = os.getenv("JWT_SECRET", "dev-only-change-me")
 
 if ENV_PROD and JWT_SECRET == "dev-only-change-me":
-    import logging
-    logging.getLogger(__name__).warning("CRITICAL: JWT_SECRET is still default in production!")
+    raise ValueError("CRITICAL SECURITY ERROR: JWT_SECRET must be explicitly set in production. Refusing to start.")
 
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXPIRY_HOURS = int(os.getenv("JWT_EXPIRY_HOURS", "1"))

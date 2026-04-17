@@ -4,6 +4,25 @@ import { t, formatCurrency } from '../utils/i18n.js';
 const RAZORPAY_IMG = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBRx9kiog-jbeMvERoPn0nj8z9OgTb-tTP26jY4rYUK9AFuoir6WU6HYTB0zychn03VprUtCV5dsVur9Uh_UmT97zbj1fZe31VZSVM8DLpf4_ztCUIqZibCr87l3pYWwkMfQZ66hX5zAuX7qsov7yL5W6Jif47BPLTJWbWwsPIKpaPE1xHKCpUXwFeZfIxCgONfIrt2rRx0KeHrRdGyYXG6BbcrmTi69vVNuYb4AI6osaLmJ4KFa4Av_zvUutCK_C8DyB7UgiIdZFdK';
 const RAZORPAY_LOGO = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBjUOUpR5wNC3bZNBGb1O1LM2OvCR3xGm8GKyuk51Qsq1QBij8GdhRg53stGUjiA4H4hvy0I0zOY8mRSh9SY5ftTHWVPnAIGy7mkuUSyx5pPloS7bAAKUVkZ2_fV18VPRrIzETOlSbnZLfBnrEoeknoahvZK4cn83dXxi3VyQgPhlkWpfzUCyRX-Nj9-_QstZZkEw2Nhtl-RjDVF6kFRjyPkHW5hgjip9f4iBWgIzhx2DPCdTWGdf668EaB9ez1BX_Le1AeqT68lJ3p';
 
+function getDynamicDateStrings(longFormat = false) {
+  const now = new Date();
+  const diffToMonday = (now.getDay() === 0 ? -6 : 1) - now.getDay();
+  const nextMonday = new Date(now);
+  nextMonday.setDate(now.getDate() + diffToMonday);
+  if (nextMonday < now && now.getDay() !== 1) nextMonday.setDate(nextMonday.getDate() + 7);
+
+  const endSunday = new Date(nextMonday);
+  endSunday.setDate(nextMonday.getDate() + 6);
+
+  const formatOpts = longFormat 
+    ? { weekday: 'long', day: 'numeric', month: 'long' }
+    : { weekday: 'short', day: 'numeric', month: 'short' };
+
+  return {
+    start: nextMonday.toLocaleDateString('en-IN', formatOpts).replace(',', ''),
+    end: endSunday.toLocaleDateString('en-IN', formatOpts).replace(',', '')
+  };
+}
 function renderAvatar(state) {
   const initial = (state.user?.name || 'Partner').charAt(0).toUpperCase();
   return `<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-black text-lg shadow-sm border border-white/20">${initial}</div>`;
@@ -138,7 +157,7 @@ export function premiumScreen(state) {
     </section>
   </main>
 
-  <footer class="mt-auto px-6 py-6 bg-gradient-to-t from-surface via-surface to-transparent pt-12 z-10 sticky bottom-0">
+  <footer class="sticky-bottom-action">
     <div class="space-y-4">
       <button onclick="actions.buyPolicy()" class="btn btn-primary h-20 w-full rounded-[28px] shadow-2xl shadow-primary/30 pointer-events-auto active:scale-95 transition-transform flex items-center px-8">
         <span class="flex-1 text-left font-black uppercase tracking-widest text-sm">${t('buy_weekly') || 'Buy Weekly Cover'}</span>
@@ -159,8 +178,9 @@ export function upiScreen(state) {
   const amt = state.premiumAmount;
   const tierLabel = state.tier === 'basic' ? 'Basic' : 'Premium';
   const platLabel = state.platform === 'swiggy' ? 'Swiggy' : state.platform === 'zomato' ? 'Zomato' : 'Both';
-  const startDate = state.policy?.startDate || 'Mon 24 Mar';
-  const endDate = state.policy?.endDate || 'Sun 30 Mar';
+  const dynamicDates = getDynamicDateStrings(false);
+  const startDate = state.policy?.startDate || dynamicDates.start;
+  const endDate = state.policy?.endDate || dynamicDates.end;
 
   return `
 <div class="min-h-full bg-surface flex flex-col">
@@ -212,12 +232,13 @@ export function upiScreen(state) {
         <div class="space-y-4">
           <div class="relative">
             <label class="absolute -top-2 left-4 bg-surface px-1 text-[10px] font-bold text-primary tracking-widest uppercase" for="upi-id-input">Enter UPI ID</label>
-            <input id="upi-id-input" aria-label="UPI ID" class="w-full bg-surface-container-lowest border-2 border-primary/20 rounded-2xl px-5 py-4 text-on-surface font-semibold focus:ring-0 focus:border-primary transition-all outline-none placeholder:text-outline-variant" placeholder="mobile-number@upi" type="text"/>
+            <input id="upi-id-input" aria-label="UPI ID" class="w-full bg-surface-container-lowest border-2 border-primary/20 rounded-2xl px-5 py-4 text-on-surface font-semibold focus:ring-0 focus:border-primary transition-all outline-none placeholder:text-outline-variant" placeholder="mobile-number@upi" type="text"
+                   oninput="const iv = /.+@.+/.test(this.value); const b = document.getElementById('btn-upi-pay'); if(b) { b.disabled = !iv; b.style.opacity = iv ? '1' : '0.5'; }"/>
             <div class="absolute right-4 top-1/2 -translate-y-1/2"><span class="material-symbols-outlined text-primary-container" style="font-variation-settings:'FILL' 1;">check_circle</span></div>
           </div>
-          <button 
+          <button id="btn-upi-pay"
             onclick="actions.activateCoverage()" 
-            ${state.purchaseInFlight ? 'disabled' : ''}
+            ${state.purchaseInFlight ? 'disabled' : 'disabled style="opacity: 0.5;"'}
             class="w-full bg-surface-container-highest text-primary font-bold py-4 rounded-2xl flex items-center justify-center gap-3 active:scale-95 duration-200 transition-all ${state.purchaseInFlight ? 'opacity-50 pointer-events-none' : ''}"
           >
             ${state.purchaseInFlight ? `<span class="animate-spin material-symbols-outlined">sync</span> ${t('processing')}...` : `<span class="material-symbols-outlined">account_balance_wallet</span>${t('pay_via_upi')}`}
@@ -238,7 +259,7 @@ export function upiScreen(state) {
     </section>
   </main>
 
-  <div style="position:sticky;bottom:0;left:0;right:0;z-index:40;padding:12px 16px calc(16px + env(safe-area-inset-bottom));background:linear-gradient(to top,#fcf9f8 60%,rgba(252,249,248,0));">
+  <div class="sticky-bottom-action">
     <div class="flex gap-2">
       <button 
         onclick="actions.activateCoverage()" 
@@ -255,8 +276,9 @@ export function upiScreen(state) {
 export function confirmationScreen(state) {
   const score = Math.max(0, Math.min(Number(state.user.score || 82), 99));
   const policyId = state.policy?.policy_id || '#SS-8829-IND';
-  const startDate = state.policy?.startDate || 'Monday 24 March';
-  const endDate = state.policy?.endDate || 'Sunday 30 March';
+  const dynamicDates = getDynamicDateStrings(true);
+  const startDate = state.policy?.startDate || dynamicDates.start;
+  const endDate = state.policy?.endDate || dynamicDates.end;
   const perEvent = state.policy?.maxPayout || 408;
 
   const triggers = [
@@ -337,7 +359,7 @@ export function confirmationScreen(state) {
     </div>
   </main>
 
-  <div style="position:sticky;bottom:0;left:0;right:0;z-index:40;padding:12px 16px calc(16px + env(safe-area-inset-bottom));background:linear-gradient(to top,#fcf9f8 60%,rgba(252,249,248,0));">
+  <div class="sticky-bottom-action">
     <button onclick="actions.goToDashboard()" class="w-full h-14 bg-gradient-to-r from-primary to-primary-container text-white rounded-3xl font-bold font-headline flex items-center justify-center gap-2 shadow-lg shadow-primary/20 haptic-pulse transition-all">
       ${t('go_to_dashboard')} <span class="material-symbols-outlined text-lg">arrow_forward</span>
     </button>

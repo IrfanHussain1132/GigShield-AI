@@ -2,8 +2,50 @@ const API = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE || 'ht
 const API_BASE = `${API}/api/v1`.replace('/api/v1/api/v1', '/api/v1');
 const _apiCache = {};
 
+// --- Offline Queue / Background Sync ---
+const DB_NAME = 'securesync-offline';
+function openSyncDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = e => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains('requests')) {
+                db.createObjectStore('requests', { keyPath: 'id', autoIncrement: true });
+            }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function queueOfflineAction(url, options) {
+    try {
+        const db = await openSyncDB();
+        await new Promise((resolve, reject) => {
+            const tx = db.transaction('requests', 'readwrite');
+            tx.objectStore('requests').add({
+                url,
+                method: options.method,
+                headers: options.headers,
+                body: options.body,
+                ts: Date.now()
+            });
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+        });
+        if ('serviceWorker' in navigator && 'SyncManager' in window) {
+            const swReg = await navigator.serviceWorker.ready;
+            await swReg.sync.register('offline-actions');
+        }
+        // Dispatch an event to show toast
+        window.dispatchEvent(new CustomEvent('offline-action-queued'));
+    } catch(e) {
+        console.error('Failed to queue offline action', e);
+    }
+}
+
 /**
- * Optimized API Helper with Neural Cache
+ * Optimized API Helper with Neural Cache & Offline Sync
  */
 export async function api(path, options = {}, state = {}, retries = 0) {
   const isGet = !options.method || options.method === 'GET';
@@ -24,7 +66,8 @@ export async function api(path, options = {}, state = {}, retries = 0) {
       headers['Authorization'] = `Bearer ${state.token}`;
     }
 
-    const res = await fetch(`${API_BASE}${path}`, {
+    const fullUrl = `${API_BASE}${path}`;
+    const res = await fetch(fullUrl, {
       ...options,
       signal: controller.signal,
       headers,
@@ -36,6 +79,11 @@ export async function api(path, options = {}, state = {}, retries = 0) {
     const payload = isJson ? await res.json().catch(() => null) : null;
 
     if (!res.ok) {
+      if (res.status === 503 && !isGet) {
+          // Trigger offline queue
+          await queueOfflineAction(fullUrl, { ...options, headers });
+          return { status: 'queued', message: 'Offline. Action queued.' };
+      }
       if (retries > 0 && res.status >= 500) {
         await new Promise(r => setTimeout(r, 1000 * (3 - retries)));
         return api(path, options, state, retries - 1);
@@ -51,6 +99,11 @@ export async function api(path, options = {}, state = {}, retries = 0) {
     if (isGet) _apiCache[cacheKey] = { data, ts: Date.now() };
     return data;
   } catch (e) {
+    // Detect network fail (fetch threw)
+    if (e.name === 'TypeError' && !isGet) {
+        await queueOfflineAction(`${API_BASE}${path}`, { ...options, headers: { 'Content-Type': 'application/json', ...(state?.token ? {'Authorization': `Bearer ${state.token}`} : {}), ...options.headers } });
+        return { status: 'queued', message: 'Offline. Action queued.' };
+    }
     if (retries > 0) {
       await new Promise(r => setTimeout(r, 1000 * (3 - retries)));
       return api(path, options, state, retries - 1);

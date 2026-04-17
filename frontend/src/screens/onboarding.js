@@ -93,7 +93,7 @@ export function loginScreen(state) {
       <span class="px-4 py-4 text-on-surface font-bold border-r border-outline-variant/20 text-xl">+91</span>
       <input id="mobile" aria-label="Mobile number" type="tel" maxlength="10" placeholder="98765 43210" class="flex-1 px-4 py-4 bg-transparent text-on-surface font-semibold text-2xl border-none outline-none focus:ring-0 placeholder:text-outline-variant" />
     </div>
-    <button onclick="actions.login()" class="btn btn-primary mt-6">
+    <button onclick="actions.login()" class="btn btn-primary mt-6 w-full">
       ${t('send_otp')} <span class="material-symbols-outlined">arrow_forward</span>
     </button>
   </div>
