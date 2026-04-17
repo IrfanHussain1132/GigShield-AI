@@ -20,9 +20,9 @@ function demoIdChips(state) {
   </div>`;
 }
 
-function appBar(state) {
+function appBar(state, forceShield = false) {
   const name = state.user?.name || '';
-  const isLoggedIn = name && name !== 'Partner';
+  const isLoggedIn = !forceShield && name && name !== 'Partner';
   const avatar = isLoggedIn
     ? `<div class="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-primary-container flex items-center justify-center text-white font-black text-lg shadow-lg border border-white/20">
         ${name.charAt(0).toUpperCase()}
@@ -43,7 +43,7 @@ function appBar(state) {
 export function verificationStartScreen(state) {
   return `
 <div class="min-h-full bg-[#fdfcfb] flex flex-col pb-32">
-  ${appBar(state)}
+  ${appBar(state, true)}
 
   <section class="px-6 py-6">
     <div class="flex items-center gap-2 mb-10">

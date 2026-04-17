@@ -367,15 +367,13 @@ const actions = {
     // Mock policy purchase — bypass 401
     await new Promise(r => setTimeout(r, 900));
     const now = new Date();
-    const diffToMonday = (now.getDay() === 0 ? -6 : 1) - now.getDay();
-    const start = new Date(now); start.setDate(now.getDate() + (diffToMonday <= 0 ? diffToMonday + 7 : diffToMonday));
-    const end = new Date(start); end.setDate(start.getDate() + 6);
+    const end = new Date(now); end.setDate(now.getDate() + 30);
     const fmt = d => d.toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short' }).replace(',','');
     state.policy = {
       status: 'success',
       policy_id: `SS-${Math.floor(Math.random()*9000)+1000}-IND`,
       tier: state.tier === 'premium' ? 'Premium' : 'Basic',
-      startDate: fmt(start),
+      startDate: fmt(now),
       endDate: fmt(end),
       maxPayout: state.tier === 'premium' ? 4080 : 816,
     };
