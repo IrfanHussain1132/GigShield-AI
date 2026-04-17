@@ -21,13 +21,19 @@ function demoIdChips(state) {
 }
 
 function appBar(state) {
-  const name = state.user?.name || 'Partner';
+  const name = state.user?.name || '';
+  const isLoggedIn = name && name !== 'Partner';
+  const avatar = isLoggedIn
+    ? `<div class="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-primary-container flex items-center justify-center text-white font-black text-lg shadow-lg border border-white/20">
+        ${name.charAt(0).toUpperCase()}
+      </div>`
+    : `<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-lg border border-white/20">
+        <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings:'FILL' 1;">shield</span>
+      </div>`;
   return `
 <header class="top-shell px-6 py-4 flex justify-between items-center w-full border-b border-outline-variant/10">
   <div class="flex items-center gap-3">
-    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-primary-container flex items-center justify-center text-white font-black text-lg shadow-lg border border-white/20">
-      ${name.charAt(0).toUpperCase()}
-    </div>
+    ${avatar}
     <h1 class="font-headline font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-container text-xl drop-shadow-sm">SecureSync AI</h1>
   </div>
   <button class="icon-btn" aria-label="Notifications"><span class="material-symbols-outlined text-outline">notifications</span></button>

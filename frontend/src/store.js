@@ -16,7 +16,7 @@ export const state = {
   premiumAmount: 25,
   slideIndex: 0,
   token: window.localStorage.getItem('securesync_token') || null,
-  user: { name: 'Rajan Kumar', zone: 'Zone 4', city: 'South Chennai', score: 92 },
+  user: { name: '', zone: 'Zone 4', city: 'South Chennai', score: 92 },
   policy: null,
   payouts: [],
   weather: null,

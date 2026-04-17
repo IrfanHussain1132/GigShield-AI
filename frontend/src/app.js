@@ -125,7 +125,7 @@ const actions = {
     }, { passive: true });
   },
 
-  goToLogin() { router.navigate('login'); },
+  goToLogin() { router.navigate('verification_start'); },
 
   async login() {
     const input = document.getElementById('mobile');
@@ -553,7 +553,7 @@ async function boot() {
       }
     }
   }
-  router.navigate(state.screen);
+  router.navigate('verification_start');
 }
 
 boot();
